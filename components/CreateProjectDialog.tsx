@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createProject } from "@/app/actions/project.actions";
@@ -13,7 +20,10 @@ interface CreateProjectDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogProps) {
+export function CreateProjectDialog({
+  open,
+  onOpenChange,
+}: CreateProjectDialogProps) {
   const router = useRouter();
   const [projectCode, setProjectCode] = useState("");
   const [name, setName] = useState("");
@@ -70,9 +80,9 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogHeader>
-        <DialogTitle>Create New Construction Project</DialogTitle>
+        <DialogTitle>Tạo dự án lắp đặt mới</DialogTitle>
         <DialogDescription>
-          Fill in the details to create a new project in the system.
+          Điền các thông tin chi tiết để tạo dự án mới trong hệ thống.
         </DialogDescription>
       </DialogHeader>
 
@@ -85,7 +95,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1">
-            <label className="text-xs font-medium">Project Code *</label>
+            <label className="text-xs font-medium">Mã Dự án *</label>
             <Input
               placeholder="PRJ-2026-001"
               value={projectCode}
@@ -95,7 +105,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium">Project Name *</label>
+            <label className="text-xs font-medium">Tên Dự án *</label>
             <Input
               placeholder="Buồng phun bi nhà máy DDC"
               value={name}
@@ -106,7 +116,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs font-medium">Description</label>
+          <label className="text-xs font-medium">Mô tả dự án</label>
           <Input
             placeholder="Overview description of the construction project"
             value={description}
@@ -116,7 +126,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1">
-            <label className="text-xs font-medium">Factory Name *</label>
+            <label className="text-xs font-medium">Nhà máy *</label>
             <Input
               placeholder="Nhà máy DDC Long An"
               value={factoryName}
@@ -126,7 +136,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium">Factory Location *</label>
+            <label className="text-xs font-medium">Địa chỉ nhà máy *</label>
             <Input
               placeholder="Đức Hòa, Tây Ninh"
               value={factoryLocation}
@@ -138,7 +148,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1">
-            <label className="text-xs font-medium">Start Date *</label>
+            <label className="text-xs font-medium">Ngày bắt đầu *</label>
             <Input
               type="date"
               value={startDate}
@@ -148,7 +158,9 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium">Planned End Date *</label>
+            <label className="text-xs font-medium">
+              Ngày dự kiến kết thúc *
+            </label>
             <Input
               type="date"
               value={plannedEndDate}
@@ -159,7 +171,9 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs font-medium">Brief Plan URL (Cloudinary / File ref)</label>
+          <label className="text-xs font-medium">
+            Kế hoạch sơ bộ (File sheet/excel)
+          </label>
           <Input
             placeholder="https://res.cloudinary.com/..."
             value={briefPlan}
@@ -168,11 +182,15 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
         </div>
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            Hủy bỏ
           </Button>
           <Button type="submit" disabled={loading}>
-            {loading ? "Creating..." : "Create Project"}
+            {loading ? "Đang tạo..." : "Tạo dự án"}
           </Button>
         </DialogFooter>
       </form>

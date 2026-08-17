@@ -4,7 +4,14 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { SerializedInstallationTask } from "@/lib/services/installationDetail.service";
 import { SerializedProject } from "@/lib/services/project.service";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -52,10 +59,12 @@ export function InstallationPlanView({
   const [sectionFilter, setSectionFilter] = useState<string>("ALL");
 
   const [formModalOpen, setFormModalOpen] = useState(false);
-  const [taskToEdit, setTaskToEdit] = useState<SerializedInstallationTask | null>(null);
+  const [taskToEdit, setTaskToEdit] =
+    useState<SerializedInstallationTask | null>(null);
 
   const [progressModalOpen, setProgressModalOpen] = useState(false);
-  const [taskForProgress, setTaskForProgress] = useState<SerializedInstallationTask | null>(null);
+  const [taskForProgress, setTaskForProgress] =
+    useState<SerializedInstallationTask | null>(null);
 
   const [reordering, setReordering] = useState(false);
 
@@ -73,11 +82,17 @@ export function InstallationPlanView({
     return tasks.filter((t) => {
       const matchesSearch =
         t.agenda.toLowerCase().includes(search.toLowerCase()) ||
-        (t.installationLocation && t.installationLocation.toLowerCase().includes(search.toLowerCase())) ||
-        (t.installationEquipments || []).some((e) => e.toLowerCase().includes(search.toLowerCase()));
+        (t.installationLocation &&
+          t.installationLocation
+            .toLowerCase()
+            .includes(search.toLowerCase())) ||
+        (t.installationEquipments || []).some((e) =>
+          e.toLowerCase().includes(search.toLowerCase()),
+        );
 
       const matchesSection =
-        sectionFilter === "ALL" || (t.sectionCode && t.sectionCode === sectionFilter);
+        sectionFilter === "ALL" ||
+        (t.sectionCode && t.sectionCode === sectionFilter);
 
       return matchesSearch && matchesSection;
     });
@@ -91,7 +106,10 @@ export function InstallationPlanView({
   }, [tasks]);
 
   // Move task up or down in sequence
-  const handleMoveSequence = async (index: number, direction: "up" | "down") => {
+  const handleMoveSequence = async (
+    index: number,
+    direction: "up" | "down",
+  ) => {
     const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= tasks.length) return;
 
@@ -240,7 +258,9 @@ export function InstallationPlanView({
               <TableRow>
                 {isSupervisor && <TableHead className="w-16">Seq</TableHead>}
                 <TableHead className="w-20">Sec</TableHead>
-                <TableHead className="min-w-[220px]">Work Item (Agenda)</TableHead>
+                <TableHead className="min-w-[220px]">
+                  Work Item (Agenda)
+                </TableHead>
                 <TableHead>Location & Equipments</TableHead>
                 <TableHead>Dates</TableHead>
                 <TableHead className="w-36">Progress</TableHead>
@@ -266,7 +286,9 @@ export function InstallationPlanView({
                             <ArrowUp className="h-3 w-3" />
                           </button>
                           <button
-                            disabled={idx === filteredTasks.length - 1 || reordering}
+                            disabled={
+                              idx === filteredTasks.length - 1 || reordering
+                            }
                             onClick={() => handleMoveSequence(idx, "down")}
                             className="p-0.5 text-zinc-400 hover:text-zinc-900 disabled:opacity-30 dark:hover:text-zinc-100"
                             title="Move Down"
@@ -281,7 +303,10 @@ export function InstallationPlanView({
                   {/* Section Code */}
                   <TableCell>
                     {task.sectionCode ? (
-                      <Badge variant="secondary" className="font-mono text-[10px]">
+                      <Badge
+                        variant="secondary"
+                        className="font-mono text-[10px]"
+                      >
                         {task.sectionCode}
                       </Badge>
                     ) : (
@@ -298,7 +323,9 @@ export function InstallationPlanView({
                       <div className="text-[11px] text-zinc-500 mt-0.5">
                         {task.qty !== null && <span>Qty: {task.qty} </span>}
                         {task.unit && <span>{task.unit} </span>}
-                        {task.dimension && <span className="italic">({task.dimension})</span>}
+                        {task.dimension && (
+                          <span className="italic">({task.dimension})</span>
+                        )}
                       </div>
                     )}
                   </TableCell>
@@ -313,15 +340,20 @@ export function InstallationPlanView({
                         </div>
                       )}
 
-                      {task.installationEquipments && task.installationEquipments.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {task.installationEquipments.map((eq, i) => (
-                            <Badge key={i} variant="outline" className="text-[9px] py-0 px-1">
-                              {eq}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
+                      {task.installationEquipments &&
+                        task.installationEquipments.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {task.installationEquipments.map((eq, i) => (
+                              <Badge
+                                key={i}
+                                variant="outline"
+                                className="text-[12px] py-0 px-1 "
+                              >
+                                {eq}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
                     </div>
                   </TableCell>
 

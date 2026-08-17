@@ -4,12 +4,26 @@ import { useState } from "react";
 import Link from "next/link";
 import { SerializedProject } from "@/lib/services/project.service";
 import { getProjectStatusStyle } from "@/lib/status-styles";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { CreateProjectDialog } from "@/components/CreateProjectDialog";
-import { Building2, Calendar, MapPin, Plus, ArrowRight, FolderKanban } from "lucide-react";
+import {
+  Building2,
+  Calendar,
+  MapPin,
+  Plus,
+  ArrowRight,
+  FolderKanban,
+} from "lucide-react";
 
 interface DashboardViewProps {
   user: {
@@ -31,18 +45,21 @@ export function DashboardView({ user, projects }: DashboardViewProps) {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-zinc-200 pb-6 dark:border-zinc-800">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Project Dashboard
+            Bảng tổng hợp dự án lắp đặt tại DDC
           </h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="text-base text-zinc-500 dark:text-zinc-400">
             {isManager
-              ? "Overseeing all construction & equipment installation projects across all factories."
-              : "Projects you are currently assigned to supervise."}
+              ? "Giám sát tất cả các dự án xây dựng và lắp đặt thiết bị tại các nhà máy."
+              : "Các dự án bạn hiện đang được giao giám sát."}
           </p>
         </div>
 
         {isManager && (
-          <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" /> New Project
+          <Button
+            onClick={() => setCreateDialogOpen(true)}
+            className="gap-2 bg-brand hover:bg-brand"
+          >
+            <Plus className="h-4 w-4" /> Tạo dự án mới
           </Button>
         )}
       </div>
@@ -62,8 +79,11 @@ export function DashboardView({ user, projects }: DashboardViewProps) {
               : "You are not assigned to any construction projects yet."}
           </p>
           {isManager && (
-            <Button onClick={() => setCreateDialogOpen(true)} className="mt-6 gap-2">
-              <Plus className="h-4 w-4" /> Create Project
+            <Button
+              onClick={() => setCreateDialogOpen(true)}
+              className="mt-6 gap-2"
+            >
+              <Plus className="h-4 w-4" /> Tạo dự án mới
             </Button>
           )}
         </div>
@@ -79,16 +99,19 @@ export function DashboardView({ user, projects }: DashboardViewProps) {
               >
                 <CardHeader className="space-y-3 pb-3">
                   <div className="flex items-center justify-between gap-2">
-                    <Badge variant="outline" className="font-mono text-xs font-semibold">
+                    <Badge
+                      variant="outline"
+                      className="font-mono text-xs font-semibold"
+                    >
                       {project.projectCode}
                     </Badge>
                     <Badge className={statusStyle.badgeClass}>
-                      {statusStyle.label}
+                      Đang triển khai
                     </Badge>
                   </div>
 
                   <div>
-                    <CardTitle className="line-clamp-1 font-semibold text-zinc-900 dark:text-zinc-50">
+                    <CardTitle className="line-clamp-2 font-semibold text-zinc-900 dark:text-zinc-50">
                       {project.name}
                     </CardTitle>
                     <CardDescription className="line-clamp-2 mt-1">
@@ -97,22 +120,24 @@ export function DashboardView({ user, projects }: DashboardViewProps) {
                   </div>
                 </CardHeader>
 
-                <CardContent className="space-y-4 text-xs text-zinc-600 dark:text-zinc-400">
+                <CardContent className="space-y-4 text-xs text-zinc-600 dark:text-zinc-400 pt-2">
                   <div className="flex items-center gap-2">
                     <Building2 className="h-4 w-4 shrink-0 text-zinc-400" />
-                    <span className="font-medium text-zinc-900 dark:text-zinc-200">
+                    <span className="font-medium text-sm dark:text-zinc-200">
                       {project.factory.name}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 shrink-0 text-zinc-400" />
-                    <span className="truncate">{project.factory.location}</span>
+                    <span className="truncate text-sm">
+                      {project.factory.location}
+                    </span>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 shrink-0 text-zinc-400" />
-                    <span>
+                    <span className="text-sm">
                       {new Date(project.startDate).toLocaleDateString()} —{" "}
                       {new Date(project.plannedEndDate).toLocaleDateString()}
                     </span>
@@ -121,8 +146,12 @@ export function DashboardView({ user, projects }: DashboardViewProps) {
 
                 <CardFooter className="pt-3 border-t border-zinc-100 dark:border-zinc-800/50">
                   <Link href={`/projects/${project._id}`} className="w-full">
-                    <Button variant="outline" size="sm" className="w-full justify-between">
-                      View Project Overview
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-between"
+                    >
+                      Xem chi tiết dự án
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>

@@ -57,7 +57,7 @@ export const auth = betterAuth({
       role: {
         type: "string",
         required: true,
-        defaultValue: "USER",
+        defaultValue: "SUPERVISOR",
         input: false, // Prevents setting own role via generic updateUser flow
       },
     },

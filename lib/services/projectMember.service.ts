@@ -1,4 +1,9 @@
-import { getProjectMembersCollection, getUsersCollection, ProjectMemberDoc } from "@/lib/db/collections";
+import { UserRoleType } from "@/app/constants/role";
+import {
+  getProjectMembersCollection,
+  getUsersCollection,
+  ProjectMemberDoc,
+} from "@/lib/db/collections";
 import { ObjectId } from "mongodb";
 
 function toObjectId(id: string): ObjectId {
@@ -22,10 +27,13 @@ export interface ProjectMemberWithUser {
     name: string;
     email: string;
     image: string | null;
+    role: UserRoleType;
   } | null;
 }
 
-function serializeProjectMember(doc: ProjectMemberDoc): SerializedProjectMember {
+function serializeProjectMember(
+  doc: ProjectMemberDoc,
+): SerializedProjectMember {
   return {
     _id: doc._id.toString(),
     projectId: doc.projectId.toString(),
@@ -33,7 +41,10 @@ function serializeProjectMember(doc: ProjectMemberDoc): SerializedProjectMember 
   };
 }
 
-export async function hasMembership(userId: string, projectId: string): Promise<boolean> {
+export async function hasMembership(
+  userId: string,
+  projectId: string,
+): Promise<boolean> {
   if (!ObjectId.isValid(userId) || !ObjectId.isValid(projectId)) {
     return false;
   }
@@ -47,14 +58,17 @@ export async function hasMembership(userId: string, projectId: string): Promise<
 
 export async function addProjectMember(
   projectId: string,
-  userId: string
+  userId: string,
 ): Promise<SerializedProjectMember> {
   const col = await getProjectMembersCollection();
   const projObjId = toObjectId(projectId);
   const userObjId = toObjectId(userId);
 
   // Check if member already exists
-  const existing = await col.findOne({ projectId: projObjId, userId: userObjId });
+  const existing = await col.findOne({
+    projectId: projObjId,
+    userId: userObjId,
+  });
   if (existing) {
     throw new Error("MEMBER_EXISTS");
   }
@@ -79,7 +93,7 @@ export async function removeProjectMember(memberId: string): Promise<boolean> {
 }
 
 export async function listMembersByProject(
-  projectId: string
+  projectId: string,
 ): Promise<ProjectMemberWithUser[]> {
   const membersCol = await getProjectMembersCollection();
   const usersCol = await getUsersCollection();
@@ -91,9 +105,7 @@ export async function listMembersByProject(
   if (members.length === 0) return [];
 
   const userIds = members.map((m) => m.userId);
-  const users = await usersCol
-    .find({ _id: { $in: userIds as any } })
-    .toArray();
+  const users = await usersCol.find({ _id: { $in: userIds as any } }).toArray();
 
   const userMap = new Map(users.map((u) => [u._id.toString(), u]));
 
@@ -108,6 +120,7 @@ export async function listMembersByProject(
             name: user.name,
             email: user.email,
             image: user.image,
+            role: user.role,
           }
         : null,
     };

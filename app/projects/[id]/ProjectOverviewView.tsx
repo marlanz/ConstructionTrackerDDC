@@ -4,7 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { ProjectOverview } from "@/lib/services/project.service";
 import { getProjectStatusStyle } from "@/lib/status-styles";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -20,6 +26,7 @@ import {
   UserCheck,
   UserPlus,
 } from "lucide-react";
+import { USER_ROLE_VN_LABELS } from "@/app/constants/role";
 
 interface ProjectOverviewViewProps {
   user: {
@@ -31,7 +38,10 @@ interface ProjectOverviewViewProps {
   overview: ProjectOverview;
 }
 
-export function ProjectOverviewView({ user, overview }: ProjectOverviewViewProps) {
+export function ProjectOverviewView({
+  user,
+  overview,
+}: ProjectOverviewViewProps) {
   const [memberModalOpen, setMemberModalOpen] = useState(false);
   const { project, members, taskSummary } = overview;
   const isManager = user.role === "MANAGER";
@@ -45,7 +55,7 @@ export function ProjectOverviewView({ user, overview }: ProjectOverviewViewProps
           href="/projects"
           className="inline-flex items-center gap-1 text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
         >
-          <ArrowLeft className="h-3.5 w-3.5" /> Back to Dashboard
+          <ArrowLeft className="h-3.5 w-3.5" /> Trở về danh sách dự án
         </Link>
       </div>
 
@@ -53,10 +63,13 @@ export function ProjectOverviewView({ user, overview }: ProjectOverviewViewProps
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-zinc-200 pb-6 dark:border-zinc-800">
         <div className="space-y-1.5">
           <div className="flex items-center gap-3">
-            <Badge variant="outline" className="font-mono text-xs font-semibold">
+            <Badge
+              variant="outline"
+              className="font-mono text-xs font-semibold"
+            >
               {project.projectCode}
             </Badge>
-            <Badge className={statusStyle.badgeClass}>{statusStyle.label}</Badge>
+            <Badge className={statusStyle.badgeClass}>Đang triển khai</Badge>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-3xl">
             {project.name}
@@ -64,8 +77,12 @@ export function ProjectOverviewView({ user, overview }: ProjectOverviewViewProps
         </div>
 
         {isManager && (
-          <Button onClick={() => setMemberModalOpen(true)} variant="outline" className="gap-2">
-            <UserPlus className="h-4 w-4" /> Manage Supervisors
+          <Button
+            onClick={() => setMemberModalOpen(true)}
+            variant="outline"
+            className="gap-2"
+          >
+            <UserPlus className="h-4 w-4" /> Quản lý thành viên giám sát
           </Button>
         )}
       </div>
@@ -73,19 +90,19 @@ export function ProjectOverviewView({ user, overview }: ProjectOverviewViewProps
       {/* Tab Navigation */}
       <div className="flex gap-4 text-sm font-medium border-b border-zinc-200 pb-2 dark:border-zinc-800">
         <span className="text-zinc-900 font-semibold border-b-2 border-zinc-900 pb-2 dark:text-zinc-100 dark:border-zinc-100">
-          Overview
+          Tổng quan
         </span>
         <Link
           href={`/projects/${project._id}/plan`}
           className="text-zinc-500 hover:text-zinc-900 pb-2 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
         >
-          Installation Plan ({taskSummary.totalTasks})
+          Kế hoạch lắp đặt ({taskSummary.totalTasks})
         </Link>
         <Link
           href={`/projects/${project._id}/reports`}
           className="text-zinc-500 hover:text-zinc-900 pb-2 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
         >
-          Daily Reports
+          Báo cáo hàng ngày
         </Link>
       </div>
 
@@ -95,16 +112,18 @@ export function ProjectOverviewView({ user, overview }: ProjectOverviewViewProps
         <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Project Details</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-base">Chi tiết dự án</CardTitle>
+              {/* <CardDescription>
                 Core location, schedule, and reference documents
-              </CardDescription>
+              </CardDescription> */}
             </CardHeader>
 
             <CardContent className="space-y-6 text-sm">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1">
-                  <span className="text-xs font-medium text-zinc-500">Factory Name</span>
+                  <span className="text-xs font-medium text-zinc-500">
+                    Nhà máy
+                  </span>
                   <div className="flex items-center gap-2 font-medium text-zinc-900 dark:text-zinc-100">
                     <Building2 className="h-4 w-4 text-zinc-400" />
                     {project.factory.name}
@@ -112,7 +131,9 @@ export function ProjectOverviewView({ user, overview }: ProjectOverviewViewProps
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-xs font-medium text-zinc-500">Location</span>
+                  <span className="text-xs font-medium text-zinc-500">
+                    Vị trí
+                  </span>
                   <div className="flex items-center gap-2 font-medium text-zinc-900 dark:text-zinc-100">
                     <MapPin className="h-4 w-4 text-zinc-400" />
                     {project.factory.location}
@@ -120,7 +141,9 @@ export function ProjectOverviewView({ user, overview }: ProjectOverviewViewProps
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-xs font-medium text-zinc-500">Start Date</span>
+                  <span className="text-xs font-medium text-zinc-500">
+                    Ngày bắt đầu
+                  </span>
                   <div className="flex items-center gap-2 font-medium text-zinc-900 dark:text-zinc-100">
                     <Calendar className="h-4 w-4 text-zinc-400" />
                     {new Date(project.startDate).toLocaleDateString()}
@@ -128,7 +151,9 @@ export function ProjectOverviewView({ user, overview }: ProjectOverviewViewProps
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-xs font-medium text-zinc-500">Planned End Date</span>
+                  <span className="text-xs font-medium text-zinc-500">
+                    Dự kiến kết thúc
+                  </span>
                   <div className="flex items-center gap-2 font-medium text-zinc-900 dark:text-zinc-100">
                     <Calendar className="h-4 w-4 text-zinc-400" />
                     {new Date(project.plannedEndDate).toLocaleDateString()}
@@ -138,7 +163,9 @@ export function ProjectOverviewView({ user, overview }: ProjectOverviewViewProps
 
               {project.description && (
                 <div className="space-y-1 border-t border-zinc-100 pt-4 dark:border-zinc-800">
-                  <span className="text-xs font-medium text-zinc-500">Description</span>
+                  <span className="text-xs font-medium text-zinc-500">
+                    Mô tả dự án
+                  </span>
                   <p className="text-zinc-700 dark:text-zinc-300 leading-relaxed">
                     {project.description}
                   </p>
@@ -153,7 +180,8 @@ export function ProjectOverviewView({ user, overview }: ProjectOverviewViewProps
                     rel="noreferrer"
                     className="inline-flex items-center gap-2 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
                   >
-                    <ExternalLink className="h-3.5 w-3.5" /> View Brief Planning Document
+                    <ExternalLink className="h-3.5 w-3.5" /> File thông tin chi
+                    tiết về kế hoạch
                   </a>
                 </div>
               )}
@@ -164,8 +192,8 @@ export function ProjectOverviewView({ user, overview }: ProjectOverviewViewProps
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <div>
-                <CardTitle className="text-base">Installation Progress</CardTitle>
-                <CardDescription>Overall plan completion rate</CardDescription>
+                <CardTitle className="text-base">Quá trình lắp đặt</CardTitle>
+                <CardDescription>Tiến độ lắp đặt tổng quan</CardDescription>
               </div>
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                 <ListTodo className="h-5 w-5" />
@@ -176,25 +204,32 @@ export function ProjectOverviewView({ user, overview }: ProjectOverviewViewProps
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium text-zinc-700 dark:text-zinc-300">
-                    Average Progress
+                    Tiến độ dự án
                   </span>
                   <span className="font-bold text-zinc-900 dark:text-zinc-50 font-mono">
                     {taskSummary.avgProgression}%
                   </span>
                 </div>
-                <Progress value={taskSummary.avgProgression} className="h-2.5" />
+                <Progress
+                  value={taskSummary.avgProgression}
+                  className="h-2.5"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4 rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900/50">
                 <div className="space-y-1">
-                  <span className="text-xs text-zinc-500">Total Work Items</span>
+                  <span className="text-xs text-zinc-500">
+                    Tổng mục lắp đặt
+                  </span>
                   <div className="text-xl font-bold font-mono text-zinc-900 dark:text-zinc-100">
                     {taskSummary.totalTasks}
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-xs text-zinc-500">Completed (100%)</span>
+                  <span className="text-xs text-zinc-500">
+                    Đã hoàn thành (100%)
+                  </span>
                   <div className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                     <CheckCircle2 className="h-4 w-4" />
                     {taskSummary.completedTasks}
@@ -203,8 +238,12 @@ export function ProjectOverviewView({ user, overview }: ProjectOverviewViewProps
               </div>
 
               <Link href={`/projects/${project._id}/plan`} className="block">
-                <Button variant="outline" size="sm" className="w-full justify-between">
-                  Open Detailed Installation Plan
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-between"
+                >
+                  Mở kế hoạch chi tiết lắp đặt
                   <ListTodo className="h-4 w-4" />
                 </Button>
               </Link>
@@ -217,12 +256,18 @@ export function ProjectOverviewView({ user, overview }: ProjectOverviewViewProps
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <div>
-                <CardTitle className="text-base">Project Team</CardTitle>
-                <CardDescription>Assigned Supervisors</CardDescription>
+                <CardTitle className="text-base">
+                  Danh sách thành viên dự án
+                </CardTitle>
+                {/* <CardDescription>Thành viên</CardDescription> */}
               </div>
               {isManager && (
-                <Button size="sm" variant="ghost" onClick={() => setMemberModalOpen(true)}>
-                  Manage
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setMemberModalOpen(true)}
+                >
+                  Quản lý
                 </Button>
               )}
             </CardHeader>
@@ -241,7 +286,9 @@ export function ProjectOverviewView({ user, overview }: ProjectOverviewViewProps
                     >
                       <div className="flex items-center gap-3">
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-100 font-semibold text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                          {member.user?.name ? member.user.name.charAt(0).toUpperCase() : "U"}
+                          {member.user?.name
+                            ? member.user.name.charAt(0).toUpperCase()
+                            : "U"}
                         </div>
                         <div>
                           <div className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
@@ -256,7 +303,7 @@ export function ProjectOverviewView({ user, overview }: ProjectOverviewViewProps
                       </div>
 
                       <Badge variant="outline" className="text-[10px]">
-                        SUPERVISOR
+                        {USER_ROLE_VN_LABELS[member.user?.role]}
                       </Badge>
                     </div>
                   ))}
