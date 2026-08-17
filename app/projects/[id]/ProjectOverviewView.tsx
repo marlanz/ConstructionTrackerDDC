@@ -70,6 +70,25 @@ export function ProjectOverviewView({ user, overview }: ProjectOverviewViewProps
         )}
       </div>
 
+      {/* Tab Navigation */}
+      <div className="flex gap-4 text-sm font-medium border-b border-zinc-200 pb-2 dark:border-zinc-800">
+        <span className="text-zinc-900 font-semibold border-b-2 border-zinc-900 pb-2 dark:text-zinc-100 dark:border-zinc-100">
+          Overview
+        </span>
+        <Link
+          href={`/projects/${project._id}/plan`}
+          className="text-zinc-500 hover:text-zinc-900 pb-2 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
+        >
+          Installation Plan ({taskSummary.totalTasks})
+        </Link>
+        <Link
+          href={`/projects/${project._id}/reports`}
+          className="text-zinc-500 hover:text-zinc-900 pb-2 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
+        >
+          Daily Reports
+        </Link>
+      </div>
+
       {/* Grid Layout */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Left Column: Project Details & Description */}
@@ -182,6 +201,13 @@ export function ProjectOverviewView({ user, overview }: ProjectOverviewViewProps
                   </div>
                 </div>
               </div>
+
+              <Link href={`/projects/${project._id}/plan`} className="block">
+                <Button variant="outline" size="sm" className="w-full justify-between">
+                  Open Detailed Installation Plan
+                  <ListTodo className="h-4 w-4" />
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>

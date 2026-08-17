@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createProject } from "@/app/actions/project.actions";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface CreateProjectDialogProps {
   open: boolean;
@@ -46,10 +47,12 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
 
     if (!result.success) {
       setError(result.error);
+      toast.error(result.error);
       setLoading(false);
       return;
     }
 
+    toast.success(`Project "${name}" created successfully`);
     setLoading(false);
     onOpenChange(false);
     // Reset form
