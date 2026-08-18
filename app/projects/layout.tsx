@@ -35,8 +35,10 @@ export default async function ProjectLayout({
       lang="en"
       className={cn("h-full", inter.variable, "font-sans", geist.variable)}
     >
-      <Navbar user={{ name: user.name, email: user.email, role: user.role }} />
       <body className="min-h-full flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 antialiased">
+        <Navbar
+          user={{ name: user.name, email: user.email, role: user.role }}
+        />
         {children}
         <Toaster position="top-right" richColors />
       </body>

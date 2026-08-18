@@ -218,6 +218,22 @@ export async function listDailyReports(
   return docs.map(serializeDailyReport);
 }
 
+/**
+ * Fetch the single most-recent daily report for a project.
+ * Returns null when no reports exist yet.
+ */
+export async function getLatestDailyReport(
+  projectId: string
+): Promise<SerializedDailyReport | null> {
+  const col = await getDailyReportsCollection();
+  const doc = await col
+    .find({ projectId: toObjectId(projectId) })
+    .sort({ date: -1 })
+    .limit(1)
+    .next();
+  return doc ? serializeDailyReport(doc) : null;
+}
+
 export async function getConstructionDayNumber(
   projectId: string,
   targetDate: Date

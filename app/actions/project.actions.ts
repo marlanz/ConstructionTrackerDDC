@@ -3,7 +3,10 @@
 import { getCurrentUser } from "@/lib/auth/auth";
 import { ERROR_CODES } from "@/lib/errors";
 import { fail, ok, Result } from "@/lib/result";
-import { createProjectSchema, updateProjectSchema } from "@/lib/schemas/project.schema";
+import {
+  createProjectSchema,
+  updateProjectSchema,
+} from "@/lib/schemas/project.schema";
 import {
   canAccessProject,
   createProject as createProjectService,
@@ -17,7 +20,9 @@ import {
 /**
  * Create a new project (MANAGER only).
  */
-export async function createProject(input: unknown): Promise<Result<SerializedProject>> {
+export async function createProject(
+  input: unknown,
+): Promise<Result<SerializedProject>> {
   try {
     const user = await getCurrentUser();
     if (!user) {
@@ -30,17 +35,26 @@ export async function createProject(input: unknown): Promise<Result<SerializedPr
 
     const parsed = createProjectSchema.safeParse(input);
     if (!parsed.success) {
-      return fail(parsed.error.issues[0]?.message || "Invalid input", ERROR_CODES.VALIDATION_ERROR);
+      return fail(
+        parsed.error.issues[0]?.message || "Invalid input",
+        ERROR_CODES.VALIDATION_ERROR,
+      );
     }
 
     const project = await createProjectService(parsed.data);
     return ok(project);
   } catch (error: any) {
     if (error.message === "PROJECT_CODE_EXISTS") {
-      return fail("A project with this projectCode already exists", ERROR_CODES.CONFLICT);
+      return fail(
+        "A project with this projectCode already exists",
+        ERROR_CODES.CONFLICT,
+      );
     }
     console.error("Error creating project:", error);
-    return fail("An error occurred while creating the project", ERROR_CODES.INTERNAL_ERROR);
+    return fail(
+      "An error occurred while creating the project",
+      ERROR_CODES.INTERNAL_ERROR,
+    );
   }
 }
 
@@ -49,7 +63,7 @@ export async function createProject(input: unknown): Promise<Result<SerializedPr
  */
 export async function updateProject(
   projectId: string,
-  input: unknown
+  input: unknown,
 ): Promise<Result<SerializedProject>> {
   try {
     const user = await getCurrentUser();
@@ -58,12 +72,18 @@ export async function updateProject(
     }
 
     if (user.role !== "MANAGER") {
-      return fail("Only managers can update project details", ERROR_CODES.FORBIDDEN);
+      return fail(
+        "Only managers can update project details",
+        ERROR_CODES.FORBIDDEN,
+      );
     }
 
     const parsed = updateProjectSchema.safeParse(input);
     if (!parsed.success) {
-      return fail(parsed.error.issues[0]?.message || "Invalid input", ERROR_CODES.VALIDATION_ERROR);
+      return fail(
+        parsed.error.issues[0]?.message || "Invalid input",
+        ERROR_CODES.VALIDATION_ERROR,
+      );
     }
 
     const updated = await updateProjectService(projectId, parsed.data);
@@ -73,10 +93,16 @@ export async function updateProject(
       return fail("Project not found", ERROR_CODES.NOT_FOUND);
     }
     if (error.message === "PROJECT_CODE_EXISTS") {
-      return fail("A project with this projectCode already exists", ERROR_CODES.CONFLICT);
+      return fail(
+        "A project with this projectCode already exists",
+        ERROR_CODES.CONFLICT,
+      );
     }
     console.error("Error updating project:", error);
-    return fail("An error occurred while updating the project", ERROR_CODES.INTERNAL_ERROR);
+    return fail(
+      "An error occurred while updating the project",
+      ERROR_CODES.INTERNAL_ERROR,
+    );
   }
 }
 
@@ -92,25 +118,36 @@ export async function listMyProjects(): Promise<Result<SerializedProject[]>> {
       return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
     }
 
-    const projects = await listProjectsForUser({ id: user.id, role: user.role });
+    const projects = await listProjectsForUser({
+      id: user.id,
+      role: user.role,
+    });
     return ok(projects);
   } catch (error: any) {
     console.error("Error listing projects:", error);
-    return fail("An error occurred while fetching projects", ERROR_CODES.INTERNAL_ERROR);
+    return fail(
+      "An error occurred while fetching projects",
+      ERROR_CODES.INTERNAL_ERROR,
+    );
   }
 }
 
 /**
  * Get detailed project overview (MANAGER: any project; SUPERVISOR: assigned projects only).
  */
-export async function getProjectOverview(projectId: string): Promise<Result<ProjectOverview>> {
+export async function getProjectOverview(
+  projectId: string,
+): Promise<Result<ProjectOverview>> {
   try {
     const user = await getCurrentUser();
     if (!user) {
       return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
     }
 
-    const hasAccess = await canAccessProject({ id: user.id, role: user.role }, projectId);
+    const hasAccess = await canAccessProject(
+      { id: user.id, role: user.role },
+      projectId,
+    );
     if (!hasAccess) {
       return fail("Not authorized for this project", ERROR_CODES.FORBIDDEN);
     }
@@ -123,6 +160,9 @@ export async function getProjectOverview(projectId: string): Promise<Result<Proj
     return ok(overview);
   } catch (error: any) {
     console.error("Error fetching project overview:", error);
-    return fail("An error occurred while fetching the project overview", ERROR_CODES.INTERNAL_ERROR);
+    return fail(
+      "An error occurred while fetching the project overview",
+      ERROR_CODES.INTERNAL_ERROR,
+    );
   }
 }

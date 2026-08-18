@@ -1,11 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SerializedInstallationTask } from "@/lib/services/installationDetail.service";
-import { createInstallationTask, updateInstallationTask } from "@/app/actions/installationDetail.actions";
+import {
+  createInstallationTask,
+  updateInstallationTask,
+} from "@/app/actions/installationDetail.actions";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -41,7 +51,9 @@ export function TaskFormModal({
 
   // Tools & Personnel arrays
   const [tools, setTools] = useState<{ party: string; name: string }[]>([]);
-  const [personnel, setPersonnel] = useState<{ party: string; role: string; amount: number; note: string }[]>([]);
+  const [personnel, setPersonnel] = useState<
+    { party: string; role: string; amount: number; note: string }[]
+  >([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,8 +67,16 @@ export function TaskFormModal({
       setDimension(taskToEdit.dimension || "");
       setInstallationLocation(taskToEdit.installationLocation || "");
       setEquipmentsText((taskToEdit.installationEquipments || []).join(", "));
-      setPlannedStartDate(taskToEdit.plannedStartDate ? taskToEdit.plannedStartDate.substring(0, 10) : "");
-      setPlannedEndDate(taskToEdit.plannedEndDate ? taskToEdit.plannedEndDate.substring(0, 10) : "");
+      setPlannedStartDate(
+        taskToEdit.plannedStartDate
+          ? taskToEdit.plannedStartDate.substring(0, 10)
+          : "",
+      );
+      setPlannedEndDate(
+        taskToEdit.plannedEndDate
+          ? taskToEdit.plannedEndDate.substring(0, 10)
+          : "",
+      );
       setInstallationPeriod(taskToEdit.installationPeriod || "");
       setNote(taskToEdit.note || "");
       setProgression(taskToEdit.progression || 0);
@@ -67,7 +87,7 @@ export function TaskFormModal({
           role: p.role,
           amount: p.amount,
           note: p.note || "",
-        }))
+        })),
       );
     } else {
       setSectionCode("");
@@ -96,7 +116,10 @@ export function TaskFormModal({
   };
 
   const handleAddPersonnel = () => {
-    setPersonnel([...personnel, { party: "CONTRACTOR", role: "Worker", amount: 1, note: "" }]);
+    setPersonnel([
+      ...personnel,
+      { party: "CONTRACTOR", role: "Worker", amount: 1, note: "" },
+    ]);
   };
 
   const handleRemovePersonnel = (idx: number) => {
@@ -144,7 +167,11 @@ export function TaskFormModal({
       return;
     }
 
-    toast.success(isEditing ? "Work item task updated successfully" : "New work item task added to plan");
+    toast.success(
+      isEditing
+        ? "Work item task updated successfully"
+        : "New work item task added to plan",
+    );
     setLoading(false);
     onOpenChange(false);
     router.refresh();
@@ -153,36 +180,35 @@ export function TaskFormModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogHeader>
-        <DialogTitle>{isEditing ? "Edit Work Item Task" : "Add New Installation Work Item"}</DialogTitle>
+        <DialogTitle>
+          {isEditing ? "Edit Work Item Task" : "Add New Installation Work Item"}
+        </DialogTitle>
         <DialogDescription>
           Specify plan details, machinery, personnel, and target dates.
         </DialogDescription>
       </DialogHeader>
 
-      <form onSubmit={handleSubmit} className="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4 max-h-[75vh] overflow-y-auto pr-1"
+      >
         {error && (
           <div className="rounded-md bg-red-50 p-3 text-xs text-red-700 dark:bg-red-950/50 dark:text-red-300">
             {error}
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div className="space-y-1 sm:col-span-1">
-            <label className="text-xs font-medium">Section Code</label>
-            <Input
-              placeholder="e.g. I, II, IV"
-              value={sectionCode}
-              onChange={(e) => setSectionCode(e.target.value)}
-            />
-          </div>
-
+        <div className="">
           <div className="space-y-1 sm:col-span-2">
-            <label className="text-xs font-medium">Agenda / Work Description *</label>
+            <label className="text-xs font-medium">
+              Agenda / Work Description *
+            </label>
             <Input
               placeholder="e.g. Lắp đặt dầm cầu trục 25T"
               value={agenda}
               onChange={(e) => setAgenda(e.target.value)}
               required
+              multiple
             />
           </div>
         </div>
@@ -216,7 +242,9 @@ export function TaskFormModal({
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs font-medium">Equipments (comma separated)</label>
+          <label className="text-xs font-medium">
+            Equipments (comma separated)
+          </label>
           <Input
             placeholder="Cẩu 25T, Máy hàn MIG, Xe nâng 5T"
             value={equipmentsText}
@@ -259,7 +287,13 @@ export function TaskFormModal({
             <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
               Installation Tools ({tools.length})
             </span>
-            <Button type="button" variant="outline" size="sm" onClick={handleAddTool} className="h-7 text-xs">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddTool}
+              className="h-7 text-xs"
+            >
               <Plus className="h-3 w-3 mr-1" /> Add Tool
             </Button>
           </div>
@@ -305,7 +339,13 @@ export function TaskFormModal({
             <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
               Personnel Allocation ({personnel.length})
             </span>
-            <Button type="button" variant="outline" size="sm" onClick={handleAddPersonnel} className="h-7 text-xs">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddPersonnel}
+              className="h-7 text-xs"
+            >
               <Plus className="h-3 w-3 mr-1" /> Add Personnel
             </Button>
           </div>
@@ -357,7 +397,11 @@ export function TaskFormModal({
         </div>
 
         <DialogFooter className="pt-3 border-t border-zinc-100 dark:border-zinc-800">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
           <Button type="submit" disabled={loading}>

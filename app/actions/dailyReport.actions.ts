@@ -17,6 +17,7 @@ import {
   deleteDailyReport as deleteDailyReportService,
   getConstructionDayNumber as getConstructionDayNumberService,
   getDailyReportById,
+  getLatestDailyReport as getLatestDailyReportService,
   listDailyReports as listDailyReportsService,
   SerializedDailyReport,
   SerializedWorkAgendaEntry,
@@ -24,6 +25,19 @@ import {
 } from "@/lib/services/dailyReport.service";
 import { canAccessProject } from "@/lib/services/project.service";
 import { hasMembership } from "@/lib/services/projectMember.service";
+import { getUserById } from "@/lib/services/user.service";
+
+/**
+ * Payload returned by getLatestDailyReport.
+ * null when the project has no reports yet.
+ */
+export type LatestReportPayload =
+  | {
+      report: SerializedDailyReport;
+      dayNumber: number;
+      createdByName: string;
+    }
+  | null;
 
 /**
  * Helper to enforce SUPERVISOR-only write access per DATA_MODEL_SPEC.md §3.3 & §3.5:
@@ -295,5 +309,47 @@ export async function getConstructionDayNumber(
     }
     console.error("Error computing construction day number:", error);
     return fail("An error occurred while computing construction day number", ERROR_CODES.INTERNAL_ERROR);
+  }
+}
+
+/**
+ * Fetch the latest daily report for a project, resolved with author name and
+ * construction day number. Returns null when no reports exist yet.
+ * Accessible to MANAGER (any project) and SUPERVISOR (assigned projects).
+ */
+export async function getLatestDailyReport(
+  projectId: string
+): Promise<Result<LatestReportPayload>> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
+    }
+
+    const hasAccess = await canAccessProject({ id: user.id, role: user.role }, projectId);
+    if (!hasAccess) {
+      return fail("Not authorized for this project", ERROR_CODES.FORBIDDEN);
+    }
+
+    const report = await getLatestDailyReportService(projectId);
+    if (!report) {
+      return ok(null);
+    }
+
+    // Resolve day number and author name server-side so the client
+    // receives only plain serializable data.
+    const [dayNumber, author] = await Promise.all([
+      getConstructionDayNumberService(projectId, new Date(report.date)),
+      getUserById(report.createdBy),
+    ]);
+
+    return ok({
+      report,
+      dayNumber,
+      createdByName: author?.name ?? report.createdBy,
+    });
+  } catch (error: any) {
+    console.error("Error fetching latest daily report:", error);
+    return fail("An error occurred while fetching latest daily report", ERROR_CODES.INTERNAL_ERROR);
   }
 }

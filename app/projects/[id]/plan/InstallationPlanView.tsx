@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -25,16 +25,14 @@ import {
   ArrowLeft,
   ArrowUp,
   ArrowDown,
-  Calendar,
   Edit2,
   ListTodo,
   MapPin,
   Plus,
   Search,
-  Wrench,
-  Users,
   SlidersHorizontal,
 } from "lucide-react";
+import { getProjectStatusStyle } from "@/lib/status-styles";
 
 interface InstallationPlanViewProps {
   user: {
@@ -49,7 +47,6 @@ interface InstallationPlanViewProps {
 }
 
 export function InstallationPlanView({
-  user,
   project,
   tasks,
   isSupervisor,
@@ -57,6 +54,8 @@ export function InstallationPlanView({
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [sectionFilter, setSectionFilter] = useState<string>("ALL");
+
+  const statusStyle = getProjectStatusStyle(project.status);
 
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] =
@@ -133,21 +132,24 @@ export function InstallationPlanView({
             href={`/projects/${project._id}`}
             className="inline-flex items-center gap-1 text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> Back to Project Overview
+            <ArrowLeft className="h-3.5 w-3.5" /> Trở về Tổng quan dự án
           </Link>
         </div>
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="font-mono text-xs">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-3">
+              <Badge
+                variant="outline"
+                className="font-mono text-xs font-semibold"
+              >
                 {project.projectCode}
               </Badge>
-              <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-2xl">
-                Installation Plan (WBS)
-              </h1>
+              <Badge className={statusStyle.badgeClass}>Đang triển khai</Badge>
             </div>
-            <p className="text-xs text-zinc-500 mt-1">{project.name}</p>
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-3xl">
+              {project.name}
+            </h1>
           </div>
 
           {isSupervisor && (
@@ -158,7 +160,7 @@ export function InstallationPlanView({
               }}
               className="gap-2"
             >
-              <Plus className="h-4 w-4" /> Add Work Item
+              <Plus className="h-4 w-4" /> Thêm kế hoạch
             </Button>
           )}
         </div>
@@ -169,16 +171,16 @@ export function InstallationPlanView({
             href={`/projects/${project._id}`}
             className="text-zinc-500 hover:text-zinc-900 pb-1 dark:text-zinc-400 dark:hover:text-zinc-100"
           >
-            Overview
+            Tổng quan
           </Link>
           <span className="text-zinc-900 font-semibold border-b-2 border-zinc-900 pb-1 dark:text-zinc-100 dark:border-zinc-100">
-            Installation Plan ({tasks.length})
+            Kế hoạch lắp đặt ({tasks.length})
           </span>
           <Link
             href={`/projects/${project._id}/reports`}
             className="text-zinc-500 hover:text-zinc-900 pb-1 dark:text-zinc-400 dark:hover:text-zinc-100"
           >
-            Daily Reports
+            Báo cáo hằng ngày
           </Link>
         </div>
       </div>
@@ -189,7 +191,7 @@ export function InstallationPlanView({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1 flex-1">
               <div className="flex items-center justify-between text-sm font-medium">
-                <span>Overall Installation Progress</span>
+                <span>Tổng quan tiến độ lắp đặt</span>
                 <span className="font-mono font-bold">{avgProgression}%</span>
               </div>
               <Progress value={avgProgression} className="h-2.5" />
@@ -197,15 +199,16 @@ export function InstallationPlanView({
 
             <div className="flex gap-4 text-xs text-zinc-600 dark:text-zinc-400 border-l border-zinc-200 pl-4 dark:border-zinc-800">
               <div>
-                <div className="text-zinc-400">Total Items</div>
+                <div className="text-zinc-400">Tổng cộng</div>
                 <div className="text-lg font-bold font-mono text-zinc-900 dark:text-zinc-100">
-                  {tasks.length}
+                  {tasks.length < 10 && `0${tasks.length}`}
                 </div>
               </div>
               <div>
-                <div className="text-zinc-400">Completed</div>
+                <div className="text-zinc-400">Đã hoàn thành</div>
                 <div className="text-lg font-bold font-mono text-emerald-600 dark:text-emerald-400">
-                  {tasks.filter((t) => t.progression >= 100).length}
+                  {tasks.filter((t) => t.progression >= 100).length < 10 &&
+                    `0${tasks.filter((t) => t.progression >= 100).length}`}
                 </div>
               </div>
             </div>
@@ -257,10 +260,8 @@ export function InstallationPlanView({
             <TableHeader>
               <TableRow>
                 {isSupervisor && <TableHead className="w-16">Seq</TableHead>}
-                <TableHead className="w-20">Sec</TableHead>
-                <TableHead className="min-w-[220px]">
-                  Work Item (Agenda)
-                </TableHead>
+                <TableHead className="w-20">STT</TableHead>
+                <TableHead className="w-100">Work Item (Agenda)</TableHead>
                 <TableHead>Location & Equipments</TableHead>
                 <TableHead>Dates</TableHead>
                 <TableHead className="w-36">Progress</TableHead>
@@ -275,7 +276,7 @@ export function InstallationPlanView({
                   {isSupervisor && (
                     <TableCell className="font-mono text-xs">
                       <div className="flex items-center gap-1">
-                        <span className="w-4 font-bold">{task.sequence}</span>
+                        <span className="w-4 font-bold">{idx + 1}</span>
                         <div className="flex flex-col">
                           <button
                             disabled={idx === 0 || reordering}
@@ -302,16 +303,12 @@ export function InstallationPlanView({
 
                   {/* Section Code */}
                   <TableCell>
-                    {task.sectionCode ? (
-                      <Badge
-                        variant="secondary"
-                        className="font-mono text-[10px]"
-                      >
-                        {task.sectionCode}
-                      </Badge>
-                    ) : (
-                      <span className="text-zinc-400 text-xs">—</span>
-                    )}
+                    <Badge
+                      variant="secondary"
+                      className="font-mono text-[10px]"
+                    >
+                      {idx + 1}
+                    </Badge>
                   </TableCell>
 
                   {/* Work Agenda */}
@@ -321,8 +318,13 @@ export function InstallationPlanView({
                     </div>
                     {(task.qty !== null || task.unit || task.dimension) && (
                       <div className="text-[11px] text-zinc-500 mt-0.5">
-                        {task.qty !== null && <span>Qty: {task.qty} </span>}
-                        {task.unit && <span>{task.unit} </span>}
+                        {task.qty !== null && (
+                          <span className="text-xs">
+                            Số lượng linh kiện: {task.qty}{" "}
+                            {task.unit && <span>{task.unit} </span>}
+                          </span>
+                        )}
+
                         {task.dimension && (
                           <span className="italic">({task.dimension})</span>
                         )}

@@ -1,5 +1,6 @@
 import { Collection, Db, ObjectId } from "mongodb";
 import clientPromise from "./mongodb";
+import { UserRoleType } from "@/app/constants/role";
 
 let dbInstance: Db | null = null;
 
@@ -20,7 +21,7 @@ export interface UserDoc {
   email: string;
   emailVerified: boolean;
   image: string | null;
-  role: "MANAGER" | "USER";
+  role: UserRoleType;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -148,17 +149,23 @@ export async function getProjectsCollection(): Promise<Collection<ProjectDoc>> {
   return db.collection<ProjectDoc>("projects");
 }
 
-export async function getProjectMembersCollection(): Promise<Collection<ProjectMemberDoc>> {
+export async function getProjectMembersCollection(): Promise<
+  Collection<ProjectMemberDoc>
+> {
   const db = await getDb();
   return db.collection<ProjectMemberDoc>("project_members");
 }
 
-export async function getInstallationDetailCollection(): Promise<Collection<InstallationDetailDoc>> {
+export async function getInstallationDetailCollection(): Promise<
+  Collection<InstallationDetailDoc>
+> {
   const db = await getDb();
   return db.collection<InstallationDetailDoc>("installation_detail");
 }
 
-export async function getDailyReportsCollection(): Promise<Collection<DailyReportDoc>> {
+export async function getDailyReportsCollection(): Promise<
+  Collection<DailyReportDoc>
+> {
   const db = await getDb();
   return db.collection<DailyReportDoc>("daily_reports");
 }

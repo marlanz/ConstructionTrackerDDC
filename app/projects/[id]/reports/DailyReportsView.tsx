@@ -28,6 +28,7 @@ import {
   Wrench,
   Link as LinkIcon,
 } from "lucide-react";
+import { getProjectStatusStyle } from "@/lib/status-styles";
 
 interface DailyReportsViewProps {
   user: {
@@ -53,7 +54,8 @@ export function DailyReportsView({
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const statusStyle = getProjectStatusStyle(project.status);
 
   // Task lookup map for linked WBS items
   const taskMap = useMemo(() => {
@@ -118,16 +120,19 @@ export function DailyReportsView({
         </div>
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="font-mono text-xs">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-3">
+              <Badge
+                variant="outline"
+                className="font-mono text-xs font-semibold"
+              >
                 {project.projectCode}
               </Badge>
-              <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-2xl">
-                Daily Site Reports
-              </h1>
+              <Badge className={statusStyle.badgeClass}>Đang triển khai</Badge>
             </div>
-            <p className="text-xs text-zinc-500 mt-1">{project.name}</p>
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-3xl">
+              {project.name}
+            </h1>
           </div>
 
           {isSupervisor && (
@@ -143,16 +148,16 @@ export function DailyReportsView({
             href={`/projects/${project._id}`}
             className="text-zinc-500 hover:text-zinc-900 pb-1 dark:text-zinc-400 dark:hover:text-zinc-100"
           >
-            Overview
+            Tổng quan
           </Link>
           <Link
             href={`/projects/${project._id}/plan`}
             className="text-zinc-500 hover:text-zinc-900 pb-1 dark:text-zinc-400 dark:hover:text-zinc-100"
           >
-            Installation Plan
+            Kế hoạch lắp đặt
           </Link>
           <span className="text-zinc-900 font-semibold border-b-2 border-zinc-900 pb-1 dark:text-zinc-100 dark:border-zinc-100">
-            Daily Reports ({reports.length})
+            Báo cáo hằng ngày ({reports.length})
           </span>
         </div>
       </div>
@@ -210,7 +215,10 @@ export function DailyReportsView({
             const dayNumber = computeDayNumber(report.date);
 
             return (
-              <Card key={report._id} className="overflow-hidden border-zinc-200 dark:border-zinc-800">
+              <Card
+                key={report._id}
+                className="overflow-hidden border-zinc-200 dark:border-zinc-800"
+              >
                 <CardHeader className="bg-zinc-50/50 border-b border-zinc-100 p-4 sm:p-6 dark:bg-zinc-900/50 dark:border-zinc-800/60">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
@@ -252,29 +260,37 @@ export function DailyReportsView({
 
                   {/* Summary Bar: Machinery & Personnel */}
                   <div className="flex flex-wrap gap-4 pt-3 text-xs text-zinc-600 dark:text-zinc-400">
-                    {report.installationMachine && report.installationMachine.length > 0 && (
-                      <div className="flex items-center gap-1.5">
-                        <Wrench className="h-3.5 w-3.5 text-zinc-400" />
-                        <span className="font-medium">Machines:</span>
-                        <div className="flex flex-wrap gap-1">
-                          {report.installationMachine.map((m, i) => (
-                            <Badge key={i} variant="outline" className="text-[10px] py-0 px-1.5">
-                              {m}
-                            </Badge>
-                          ))}
+                    {report.installationMachine &&
+                      report.installationMachine.length > 0 && (
+                        <div className="flex items-center gap-1.5">
+                          <Wrench className="h-3.5 w-3.5 text-zinc-400" />
+                          <span className="font-medium">Machines:</span>
+                          <div className="flex flex-wrap gap-1">
+                            {report.installationMachine.map((m, i) => (
+                              <Badge
+                                key={i}
+                                variant="outline"
+                                className="text-[10px] py-0 px-1.5"
+                              >
+                                {m}
+                              </Badge>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {report.installationPersonel && report.installationPersonel.length > 0 && (
-                      <div className="flex items-center gap-1.5">
-                        <Users className="h-3.5 w-3.5 text-zinc-400" />
-                        <span className="font-medium">Crew:</span>
-                        <span>
-                          {report.installationPersonel.map((p) => `${p.amount} ${p.role}`).join(", ")}
-                        </span>
-                      </div>
-                    )}
+                    {report.installationPersonel &&
+                      report.installationPersonel.length > 0 && (
+                        <div className="flex items-center gap-1.5">
+                          <Users className="h-3.5 w-3.5 text-zinc-400" />
+                          <span className="font-medium">Crew:</span>
+                          <span>
+                            {report.installationPersonel
+                              .map((p) => `${p.amount} ${p.role}`)
+                              .join(", ")}
+                          </span>
+                        </div>
+                      )}
                   </div>
                 </CardHeader>
 
@@ -286,7 +302,9 @@ export function DailyReportsView({
                     </h4>
 
                     {report.workAgenda.map((entry) => {
-                      const linkedTask = entry.taskId ? taskMap.get(entry.taskId) : null;
+                      const linkedTask = entry.taskId
+                        ? taskMap.get(entry.taskId)
+                        : null;
 
                       return (
                         <div
@@ -299,9 +317,14 @@ export function DailyReportsView({
                                 {entry.title}
                               </h5>
                               {linkedTask && (
-                                <Badge variant="secondary" className="text-[10px] font-mono gap-1">
-                                  <LinkIcon className="h-3 w-3" />
-                                  [{linkedTask.sectionCode || "WBS"}] {linkedTask.agenda} ({linkedTask.progression}%)
+                                <Badge
+                                  variant="secondary"
+                                  className="text-[10px] font-mono gap-1"
+                                >
+                                  <LinkIcon className="h-3 w-3" />[
+                                  {linkedTask.sectionCode || "WBS"}]{" "}
+                                  {linkedTask.agenda} ({linkedTask.progression}
+                                  %)
                                 </Badge>
                               )}
                             </div>

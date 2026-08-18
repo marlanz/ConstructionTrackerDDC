@@ -3,31 +3,37 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ProjectOverview } from "@/lib/services/project.service";
+import { LatestReportPayload } from "@/app/actions/dailyReport.actions";
 import { getProjectStatusStyle } from "@/lib/status-styles";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 import { MemberManagementModal } from "@/components/MemberManagementModal";
 import {
   ArrowLeft,
+  ArrowRight,
   Building2,
   Calendar,
+  CalendarDays,
   CheckCircle2,
+  ClipboardList,
+  Clock,
   ExternalLink,
+  FileText,
   ListTodo,
   MapPin,
   UserCheck,
   UserPlus,
 } from "lucide-react";
 import { USER_ROLE_VN_LABELS, UserRoleType } from "@/app/constants/role";
-import { UserRole } from "@/lib/schemas/user.schema";
 
 interface ProjectOverviewViewProps {
   user: {
@@ -37,11 +43,158 @@ interface ProjectOverviewViewProps {
     role: string;
   };
   overview: ProjectOverview;
+  latestReport: LatestReportPayload;
 }
+
+// ---------------------------------------------------------------------------
+// CompactLatestReportCard (Sidebar variant)
+// ---------------------------------------------------------------------------
+
+interface CompactLatestReportCardProps {
+  latestReport: LatestReportPayload;
+  projectId: string;
+}
+
+function CompactLatestReportCard({
+  latestReport,
+  projectId,
+}: CompactLatestReportCardProps) {
+  const reportsHref = `/projects/${projectId}/reports`;
+
+  // ── Empty state ───────────────────────────────────────────────────────────
+  if (!latestReport) {
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+              <ClipboardList className="h-4 w-4" />
+            </div>
+            <div>
+              <CardTitle className="text-base">Báo cáo mới nhất</CardTitle>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-zinc-200 bg-zinc-50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/40">
+            <FileText className="h-8 w-8 text-zinc-400" />
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                Chưa có báo cáo hiện trường nào
+              </p>
+              <p className="text-[11px] text-zinc-500">
+                Báo cáo ngày đầu tiên sẽ xuất hiện ở đây.
+              </p>
+            </div>
+          </div>
+          <Link href={reportsHref} className="block">
+            <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs">
+              Xem tất cả báo cáo
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // ── Content state ─────────────────────────────────────────────────────────
+  const { report, dayNumber, createdByName } = latestReport;
+  const reportDate = new Date(report.date).toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+            <ClipboardList className="h-4 w-4" />
+          </div>
+          <div>
+            <CardTitle className="text-base">Báo cáo mới nhất</CardTitle>
+            <CardDescription className="text-[11px]">Báo cáo hiện trường</CardDescription>
+          </div>
+        </div>
+        <Badge variant="secondary" className="text-[11px] font-semibold shrink-0">
+          Ngày {dayNumber}
+        </Badge>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        {/* Meta summary */}
+        <div className="space-y-2 rounded-lg bg-zinc-50 p-3 text-xs dark:bg-zinc-900/50">
+          <div className="flex items-center justify-between text-zinc-700 dark:text-zinc-300">
+            <span className="flex items-center gap-1.5 font-medium">
+              <CalendarDays className="h-3.5 w-3.5 text-zinc-400" />
+              {reportDate}
+            </span>
+            <span className="flex items-center gap-1 text-zinc-500">
+              <Clock className="h-3.5 w-3.5 text-zinc-400" />
+              {report.workStartTime}–{report.workEndTime}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 pt-1.5 border-t border-zinc-200/60 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400">
+            <UserCheck className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+            <span className="truncate">
+              Người báo cáo: <strong className="font-semibold text-zinc-800 dark:text-zinc-200">{createdByName}</strong>
+            </span>
+          </div>
+        </div>
+
+        {/* Work items list (titles only) */}
+        {report.workAgenda.length > 0 ? (
+          <div className="space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+              Nội dung công việc ({report.workAgenda.length})
+            </p>
+            <div className="space-y-2">
+              {report.workAgenda.map((entry, idx) => (
+                <div
+                  key={entry._id}
+                  className="flex items-start gap-2 rounded-md border border-zinc-100 p-2.5 dark:border-zinc-800"
+                >
+                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-[10px] font-bold text-zinc-500 dark:bg-zinc-800">
+                    {idx + 1}
+                  </span>
+                  <p className="text-xs font-medium text-zinc-900 dark:text-zinc-100 leading-snug line-clamp-2">
+                    {entry.title}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className="text-xs text-zinc-500 py-2 text-center">
+            Chưa có mục công việc nào.
+          </p>
+        )}
+
+        <Separator />
+
+        {/* View All Link */}
+        <Link href={reportsHref} className="block">
+          <Button variant="outline" size="sm" className="w-full justify-between text-xs">
+            <span>Xem tất cả báo cáo</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Button>
+        </Link>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ProjectOverviewView
+// ---------------------------------------------------------------------------
 
 export function ProjectOverviewView({
   user,
   overview,
+  latestReport,
 }: ProjectOverviewViewProps) {
   const [memberModalOpen, setMemberModalOpen] = useState(false);
   const { project, members, taskSummary } = overview;
@@ -107,16 +260,22 @@ export function ProjectOverviewView({
         </Link>
       </div>
 
-      {/* Grid Layout */}
+      {/* Grid Layout (Order-1 on mobile for Latest Report sidebar so it's above the fold) */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Left Column: Project Details & Description */}
-        <div className="space-y-6 lg:col-span-2">
+        {/* Right Column in DOM / Order 1 on mobile: Compact Latest Report Card */}
+        <div className="order-1 lg:order-2 lg:col-span-1 space-y-6">
+          <CompactLatestReportCard
+            latestReport={latestReport}
+            projectId={project._id}
+          />
+        </div>
+
+        {/* Left Column in DOM / Order 2 on mobile: Project Details, Task Progress, Members */}
+        <div className="order-2 lg:order-1 lg:col-span-2 space-y-6">
+          {/* Card 1: Project Details */}
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Chi tiết dự án</CardTitle>
-              {/* <CardDescription>
-                Core location, schedule, and reference documents
-              </CardDescription> */}
             </CardHeader>
 
             <CardContent className="space-y-6 text-sm">
@@ -189,7 +348,7 @@ export function ProjectOverviewView({
             </CardContent>
           </Card>
 
-          {/* Task Progress Summary Card */}
+          {/* Card 2: Task Progress Summary */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <div>
@@ -250,17 +409,14 @@ export function ProjectOverviewView({
               </Link>
             </CardContent>
           </Card>
-        </div>
 
-        {/* Right Column: Project Members / Supervisors */}
-        <div className="space-y-6 lg:col-span-1">
+          {/* Card 3: Project Members (Relocated here from right column) */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <div>
                 <CardTitle className="text-base">
                   Danh sách thành viên dự án
                 </CardTitle>
-                {/* <CardDescription>Thành viên</CardDescription> */}
               </div>
               {isManager && (
                 <Button
@@ -279,7 +435,7 @@ export function ProjectOverviewView({
                   No supervisors assigned yet.
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {members.map((member) => (
                     <div
                       key={member._id}
@@ -327,3 +483,4 @@ export function ProjectOverviewView({
     </div>
   );
 }
+

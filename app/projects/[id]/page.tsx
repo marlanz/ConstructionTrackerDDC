@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth/auth";
 import { getProjectOverview } from "@/app/actions/project.actions";
+import { getLatestDailyReport } from "@/app/actions/dailyReport.actions";
 import { redirect, notFound } from "next/navigation";
 import { ProjectOverviewView } from "./ProjectOverviewView";
 
@@ -18,9 +19,13 @@ export default async function ProjectDetailPage({
     redirect("/login");
   }
 
-  const result = await getProjectOverview(id);
-  if (!result.success) {
-    if (result.code === "FORBIDDEN") {
+  const [overviewResult, latestReportResult] = await Promise.all([
+    getProjectOverview(id),
+    getLatestDailyReport(id),
+  ]);
+
+  if (!overviewResult.success) {
+    if (overviewResult.code === "FORBIDDEN") {
       redirect("/projects");
     }
     notFound();
@@ -36,9 +41,11 @@ export default async function ProjectDetailPage({
             email: user.email,
             role: user.role,
           }}
-          overview={result.data}
+          overview={overviewResult.data}
+          latestReport={latestReportResult.success ? latestReportResult.data : null}
         />
       </main>
     </div>
   );
 }
+

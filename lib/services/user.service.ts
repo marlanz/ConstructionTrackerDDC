@@ -1,4 +1,5 @@
 import { getUsersCollection, UserDoc } from "@/lib/db/collections";
+import { UserRoleType } from "@/app/constants/role";
 import { ObjectId } from "mongodb";
 
 function toObjectId(id: string): ObjectId | string {
@@ -24,7 +25,7 @@ export async function getUserById(userId: string): Promise<SerializedUser | null
 
 export async function setUserRole(
   userId: string,
-  role: "MANAGER" | "USER"
+  role: UserRoleType | string
 ): Promise<SerializedUser | null> {
   const usersCol = await getUsersCollection();
   const query = { _id: toObjectId(userId) as any };
@@ -33,7 +34,7 @@ export async function setUserRole(
     query,
     {
       $set: {
-        role,
+        role: role as UserRoleType,
         updatedAt: new Date(),
       },
     },
