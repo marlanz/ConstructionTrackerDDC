@@ -1,10 +1,12 @@
 import { getCurrentUser } from "@/lib/auth/auth";
-import { getProjectById, canAccessProject } from "@/lib/services/project.service";
+import {
+  getProjectById,
+  canAccessProject,
+} from "@/lib/services/project.service";
 import { listDailyReports } from "@/app/actions/dailyReport.actions";
 import { listInstallationTasks } from "@/app/actions/installationDetail.actions";
 import { hasMembership } from "@/lib/services/projectMember.service";
 import { redirect, notFound } from "next/navigation";
-import { Navbar } from "@/components/Navbar";
 import { DailyReportsView } from "./DailyReportsView";
 
 interface DailyReportsPageProps {
@@ -13,7 +15,9 @@ interface DailyReportsPageProps {
   }>;
 }
 
-export default async function DailyReportsPage({ params }: DailyReportsPageProps) {
+export default async function DailyReportsPage({
+  params,
+}: DailyReportsPageProps) {
   const { id } = await params;
   const user = await getCurrentUser();
   if (!user) {
@@ -25,7 +29,10 @@ export default async function DailyReportsPage({ params }: DailyReportsPageProps
     notFound();
   }
 
-  const hasAccess = await canAccessProject({ id: user.id, role: user.role }, id);
+  const hasAccess = await canAccessProject(
+    { id: user.id, role: user.role },
+    id,
+  );
   if (!hasAccess) {
     redirect("/projects");
   }
@@ -40,10 +47,14 @@ export default async function DailyReportsPage({ params }: DailyReportsPageProps
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-      <Navbar user={{ name: user.name, email: user.email, role: user.role }} />
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <DailyReportsView
-          user={{ id: user.id, name: user.name, email: user.email, role: user.role }}
+          user={{
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          }}
           project={project}
           reports={reports}
           tasks={tasks}

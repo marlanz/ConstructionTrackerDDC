@@ -12,7 +12,7 @@ interface NavbarProps {
   user: {
     name: string;
     email: string;
-    role: UserRoleType;
+    role: string;
   } | null;
 }
 
@@ -53,7 +53,7 @@ export function Navbar({ user }: NavbarProps) {
                 variant={user.role === "MANAGER" ? "default" : "secondary"}
                 className="font-mono text-[10px] tracking-wider uppercase"
               >
-                {USER_ROLE_VN_LABELS[user.role]}
+                {USER_ROLE_VN_LABELS[user.role as UserRoleType]}
               </Badge>
 
               <Button

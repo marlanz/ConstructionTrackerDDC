@@ -26,7 +26,8 @@ import {
   UserCheck,
   UserPlus,
 } from "lucide-react";
-import { USER_ROLE_VN_LABELS } from "@/app/constants/role";
+import { USER_ROLE_VN_LABELS, UserRoleType } from "@/app/constants/role";
+import { UserRole } from "@/lib/schemas/user.schema";
 
 interface ProjectOverviewViewProps {
   user: {
@@ -303,7 +304,7 @@ export function ProjectOverviewView({
                       </div>
 
                       <Badge variant="outline" className="text-[10px]">
-                        {USER_ROLE_VN_LABELS[member.user?.role]}
+                        {USER_ROLE_VN_LABELS[member.user?.role as UserRoleType]}
                       </Badge>
                     </div>
                   ))}
