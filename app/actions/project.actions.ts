@@ -26,17 +26,17 @@ export async function createProject(
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
     }
 
     if (user.role !== "MANAGER") {
-      return fail("Only managers can create projects", ERROR_CODES.FORBIDDEN);
+      return fail("Chỉ có quản lý mới có quyền tạo dự án", ERROR_CODES.FORBIDDEN);
     }
 
     const parsed = createProjectSchema.safeParse(input);
     if (!parsed.success) {
       return fail(
-        parsed.error.issues[0]?.message || "Invalid input",
+        parsed.error.issues[0]?.message || "Dữ liệu nhập không hợp lệ",
         ERROR_CODES.VALIDATION_ERROR,
       );
     }
@@ -46,13 +46,13 @@ export async function createProject(
   } catch (error: any) {
     if (error.message === "PROJECT_CODE_EXISTS") {
       return fail(
-        "A project with this projectCode already exists",
+        "Mã dự án này đã tồn tại trong hệ thống",
         ERROR_CODES.CONFLICT,
       );
     }
     console.error("Error creating project:", error);
     return fail(
-      "An error occurred while creating the project",
+      "Đã xảy ra lỗi khi tạo dự án",
       ERROR_CODES.INTERNAL_ERROR,
     );
   }
@@ -68,12 +68,12 @@ export async function updateProject(
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
     }
 
     if (user.role !== "MANAGER") {
       return fail(
-        "Only managers can update project details",
+        "Chỉ có quản lý mới có quyền cập nhật thông tin dự án",
         ERROR_CODES.FORBIDDEN,
       );
     }
@@ -81,7 +81,7 @@ export async function updateProject(
     const parsed = updateProjectSchema.safeParse(input);
     if (!parsed.success) {
       return fail(
-        parsed.error.issues[0]?.message || "Invalid input",
+        parsed.error.issues[0]?.message || "Dữ liệu nhập không hợp lệ",
         ERROR_CODES.VALIDATION_ERROR,
       );
     }
@@ -90,17 +90,17 @@ export async function updateProject(
     return ok(updated);
   } catch (error: any) {
     if (error.message === "PROJECT_NOT_FOUND") {
-      return fail("Project not found", ERROR_CODES.NOT_FOUND);
+      return fail("Không tìm thấy dự án", ERROR_CODES.NOT_FOUND);
     }
     if (error.message === "PROJECT_CODE_EXISTS") {
       return fail(
-        "A project with this projectCode already exists",
+        "Mã dự án này đã tồn tại trong hệ thống",
         ERROR_CODES.CONFLICT,
       );
     }
     console.error("Error updating project:", error);
     return fail(
-      "An error occurred while updating the project",
+      "Đã xảy ra lỗi khi cập nhật dự án",
       ERROR_CODES.INTERNAL_ERROR,
     );
   }
@@ -115,7 +115,7 @@ export async function listMyProjects(): Promise<Result<SerializedProject[]>> {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
     }
 
     const projects = await listProjectsForUser({
@@ -126,7 +126,7 @@ export async function listMyProjects(): Promise<Result<SerializedProject[]>> {
   } catch (error: any) {
     console.error("Error listing projects:", error);
     return fail(
-      "An error occurred while fetching projects",
+      "Đã xảy ra lỗi khi tải danh sách dự án",
       ERROR_CODES.INTERNAL_ERROR,
     );
   }
@@ -141,7 +141,7 @@ export async function getProjectOverview(
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
     }
 
     const hasAccess = await canAccessProject(
@@ -149,19 +149,19 @@ export async function getProjectOverview(
       projectId,
     );
     if (!hasAccess) {
-      return fail("Not authorized for this project", ERROR_CODES.FORBIDDEN);
+      return fail("Bạn không có quyền truy cập dự án này", ERROR_CODES.FORBIDDEN);
     }
 
     const overview = await getProjectOverviewService(projectId);
     if (!overview) {
-      return fail("Project not found", ERROR_CODES.NOT_FOUND);
+      return fail("Không tìm thấy dự án", ERROR_CODES.NOT_FOUND);
     }
 
     return ok(overview);
   } catch (error: any) {
     console.error("Error fetching project overview:", error);
     return fail(
-      "An error occurred while fetching the project overview",
+      "Đã xảy ra lỗi khi tải thông tin tổng quan dự án",
       ERROR_CODES.INTERNAL_ERROR,
     );
   }

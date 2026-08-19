@@ -1,3 +1,5 @@
+import { roleLabels } from "@/lib/i18n/labels";
+
 export const UserRole = {
   MANAGER: "MANAGER",
   SUPERVISOR: "SUPERVISOR",
@@ -7,7 +9,7 @@ export const UserRole = {
 export type UserRoleType = (typeof UserRole)[keyof typeof UserRole];
 
 export const USER_ROLE_VN_LABELS: Record<UserRoleType, string> = {
-  [UserRole.MANAGER]: "Quản lý dự án",
-  [UserRole.SUPERVISOR]: "Giám sát viên",
-  [UserRole.CLIENT]: "Khách hàng",
+  [UserRole.MANAGER]: roleLabels.MANAGER,
+  [UserRole.SUPERVISOR]: roleLabels.SUPERVISOR,
+  [UserRole.CLIENT]: roleLabels.CLIENT,
 };

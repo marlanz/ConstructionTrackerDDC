@@ -11,16 +11,16 @@ export const PROJECT_STATUSES = [
 export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
 
 export const factorySchema = z.object({
-  name: z.string().min(1, "Factory name is required"),
-  location: z.string().min(1, "Factory location is required"),
+  name: z.string().min(1, "Vui lòng nhập tên nhà máy"),
+  location: z.string().min(1, "Vui lòng nhập địa chỉ nhà máy"),
 });
 
 export const createProjectSchema = z.object({
   projectCode: z
     .string()
-    .min(1, "Project code is required")
+    .min(1, "Vui lòng nhập mã dự án")
     .trim(),
-  name: z.string().min(1, "Project name is required").trim(),
+  name: z.string().min(1, "Vui lòng nhập tên dự án").trim(),
   description: z.string().default(""),
   factory: factorySchema,
   briefPlan: z.string().nullable().optional().default(null),

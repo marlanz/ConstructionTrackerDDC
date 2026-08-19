@@ -39,13 +39,13 @@ export async function createInstallationTask(
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
     }
 
     const isSupervisor = await canWriteProjectPlan(user.id, projectId);
     if (!isSupervisor) {
       return fail(
-        "Only assigned supervisors can create installation tasks for this project",
+        "Chỉ có giám sát viên được phân công mới có quyền tạo hạng mục công việc cho dự án này",
         ERROR_CODES.FORBIDDEN
       );
     }
@@ -56,14 +56,14 @@ export async function createInstallationTask(
     });
 
     if (!parsed.success) {
-      return fail(parsed.error.issues[0]?.message || "Invalid input", ERROR_CODES.VALIDATION_ERROR);
+      return fail(parsed.error.issues[0]?.message || "Dữ liệu nhập không hợp lệ", ERROR_CODES.VALIDATION_ERROR);
     }
 
     const task = await createInstallationTaskService(projectId, parsed.data);
     return ok(task);
   } catch (error: any) {
     console.error("Error creating installation task:", error);
-    return fail("An error occurred while creating the installation task", ERROR_CODES.INTERNAL_ERROR);
+    return fail("Đã xảy ra lỗi khi tạo hạng mục lắp đặt", ERROR_CODES.INTERNAL_ERROR);
   }
 }
 
@@ -77,35 +77,35 @@ export async function updateInstallationTask(
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
     }
 
     const existingTask = await getInstallationTaskById(taskId);
     if (!existingTask) {
-      return fail("Installation task not found", ERROR_CODES.NOT_FOUND);
+      return fail("Không tìm thấy hạng mục lắp đặt", ERROR_CODES.NOT_FOUND);
     }
 
     const isSupervisor = await canWriteProjectPlan(user.id, existingTask.projectId);
     if (!isSupervisor) {
       return fail(
-        "Only assigned supervisors can update installation tasks for this project",
+        "Chỉ có giám sát viên được phân công mới có quyền cập nhật hạng mục công việc cho dự án này",
         ERROR_CODES.FORBIDDEN
       );
     }
 
     const parsed = updateInstallationTaskSchema.safeParse(input);
     if (!parsed.success) {
-      return fail(parsed.error.issues[0]?.message || "Invalid input", ERROR_CODES.VALIDATION_ERROR);
+      return fail(parsed.error.issues[0]?.message || "Dữ liệu nhập không hợp lệ", ERROR_CODES.VALIDATION_ERROR);
     }
 
     const updated = await updateInstallationTaskService(taskId, parsed.data);
     return ok(updated);
   } catch (error: any) {
     if (error.message === "TASK_NOT_FOUND") {
-      return fail("Installation task not found", ERROR_CODES.NOT_FOUND);
+      return fail("Không tìm thấy hạng mục lắp đặt", ERROR_CODES.NOT_FOUND);
     }
     console.error("Error updating installation task:", error);
-    return fail("An error occurred while updating the installation task", ERROR_CODES.INTERNAL_ERROR);
+    return fail("Đã xảy ra lỗi khi cập nhật hạng mục lắp đặt", ERROR_CODES.INTERNAL_ERROR);
   }
 }
 
@@ -119,23 +119,23 @@ export async function updateTaskProgress(
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
     }
 
     const parsed = updateTaskProgressSchema.safeParse({ taskId, progression });
     if (!parsed.success) {
-      return fail(parsed.error.issues[0]?.message || "Invalid input", ERROR_CODES.VALIDATION_ERROR);
+      return fail(parsed.error.issues[0]?.message || "Dữ liệu nhập không hợp lệ", ERROR_CODES.VALIDATION_ERROR);
     }
 
     const existingTask = await getInstallationTaskById(taskId);
     if (!existingTask) {
-      return fail("Installation task not found", ERROR_CODES.NOT_FOUND);
+      return fail("Không tìm thấy hạng mục lắp đặt", ERROR_CODES.NOT_FOUND);
     }
 
     const isSupervisor = await canWriteProjectPlan(user.id, existingTask.projectId);
     if (!isSupervisor) {
       return fail(
-        "Only assigned supervisors can update task progression",
+        "Chỉ có giám sát viên được phân công mới có quyền cập nhật tiến độ hạng mục",
         ERROR_CODES.FORBIDDEN
       );
     }
@@ -144,10 +144,10 @@ export async function updateTaskProgress(
     return ok(updated);
   } catch (error: any) {
     if (error.message === "TASK_NOT_FOUND") {
-      return fail("Installation task not found", ERROR_CODES.NOT_FOUND);
+      return fail("Không tìm thấy hạng mục lắp đặt", ERROR_CODES.NOT_FOUND);
     }
     console.error("Error updating task progress:", error);
-    return fail("An error occurred while updating task progress", ERROR_CODES.INTERNAL_ERROR);
+    return fail("Đã xảy ra lỗi khi cập nhật tiến độ hạng mục", ERROR_CODES.INTERNAL_ERROR);
   }
 }
 
@@ -161,18 +161,18 @@ export async function reorderInstallationTasks(
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
     }
 
     const parsed = reorderInstallationTasksSchema.safeParse({ projectId, orderedTaskIds });
     if (!parsed.success) {
-      return fail(parsed.error.issues[0]?.message || "Invalid input", ERROR_CODES.VALIDATION_ERROR);
+      return fail(parsed.error.issues[0]?.message || "Dữ liệu nhập không hợp lệ", ERROR_CODES.VALIDATION_ERROR);
     }
 
     const isSupervisor = await canWriteProjectPlan(user.id, projectId);
     if (!isSupervisor) {
       return fail(
-        "Only assigned supervisors can reorder installation tasks for this project",
+        "Chỉ có giám sát viên được phân công mới có quyền sắp xếp lại thứ tự hạng mục cho dự án này",
         ERROR_CODES.FORBIDDEN
       );
     }
@@ -181,7 +181,7 @@ export async function reorderInstallationTasks(
     return ok({ reordered: true });
   } catch (error: any) {
     console.error("Error reordering installation tasks:", error);
-    return fail("An error occurred while reordering installation tasks", ERROR_CODES.INTERNAL_ERROR);
+    return fail("Đã xảy ra lỗi khi sắp xếp lại thứ tự hạng mục", ERROR_CODES.INTERNAL_ERROR);
   }
 }
 
@@ -194,18 +194,18 @@ export async function listInstallationTasks(
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
     }
 
     const hasAccess = await canAccessProject({ id: user.id, role: user.role }, projectId);
     if (!hasAccess) {
-      return fail("Not authorized for this project", ERROR_CODES.FORBIDDEN);
+      return fail("Bạn không có quyền truy cập dự án này", ERROR_CODES.FORBIDDEN);
     }
 
     const tasks = await listInstallationTasksService(projectId);
     return ok(tasks);
   } catch (error: any) {
     console.error("Error listing installation tasks:", error);
-    return fail("An error occurred while fetching installation tasks", ERROR_CODES.INTERNAL_ERROR);
+    return fail("Đã xảy ra lỗi khi tải danh sách hạng mục lắp đặt", ERROR_CODES.INTERNAL_ERROR);
   }
 }

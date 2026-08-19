@@ -20,26 +20,26 @@ export async function addProjectMember(
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
     }
 
     if (user.role !== "MANAGER") {
-      return fail("Only managers can assign project members", ERROR_CODES.FORBIDDEN);
+      return fail("Chỉ có quản lý mới có quyền phân công thành viên dự án", ERROR_CODES.FORBIDDEN);
     }
 
     const parsed = addProjectMemberSchema.safeParse({ projectId, userId });
     if (!parsed.success) {
-      return fail(parsed.error.issues[0]?.message || "Invalid input", ERROR_CODES.VALIDATION_ERROR);
+      return fail(parsed.error.issues[0]?.message || "Dữ liệu nhập không hợp lệ", ERROR_CODES.VALIDATION_ERROR);
     }
 
     const member = await addProjectMemberService(parsed.data.projectId, parsed.data.userId);
     return ok(member);
   } catch (error: any) {
     if (error.message === "MEMBER_EXISTS") {
-      return fail("User is already a member of this project", ERROR_CODES.CONFLICT);
+      return fail("Người dùng này đã được phân công vào dự án", ERROR_CODES.CONFLICT);
     }
     console.error("Error adding project member:", error);
-    return fail("An error occurred while adding project member", ERROR_CODES.INTERNAL_ERROR);
+    return fail("Đã xảy ra lỗi khi thêm thành viên vào dự án", ERROR_CODES.INTERNAL_ERROR);
   }
 }
 
@@ -50,26 +50,26 @@ export async function removeProjectMember(memberId: string): Promise<Result<{ re
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
     }
 
     if (user.role !== "MANAGER") {
-      return fail("Only managers can remove project members", ERROR_CODES.FORBIDDEN);
+      return fail("Chỉ có quản lý mới có quyền xóa thành viên khỏi dự án", ERROR_CODES.FORBIDDEN);
     }
 
     const parsed = removeProjectMemberSchema.safeParse({ memberId });
     if (!parsed.success) {
-      return fail(parsed.error.issues[0]?.message || "Invalid input", ERROR_CODES.VALIDATION_ERROR);
+      return fail(parsed.error.issues[0]?.message || "Dữ liệu nhập không hợp lệ", ERROR_CODES.VALIDATION_ERROR);
     }
 
     const success = await removeProjectMemberService(parsed.data.memberId);
     if (!success) {
-      return fail("Project member assignment not found", ERROR_CODES.NOT_FOUND);
+      return fail("Không tìm thấy phân công thành viên dự án", ERROR_CODES.NOT_FOUND);
     }
 
     return ok({ removed: true });
   } catch (error: any) {
     console.error("Error removing project member:", error);
-    return fail("An error occurred while removing project member", ERROR_CODES.INTERNAL_ERROR);
+    return fail("Đã xảy ra lỗi khi xóa thành viên khỏi dự án", ERROR_CODES.INTERNAL_ERROR);
   }
 }

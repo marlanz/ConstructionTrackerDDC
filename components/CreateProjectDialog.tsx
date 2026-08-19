@@ -62,7 +62,7 @@ export function CreateProjectDialog({
       return;
     }
 
-    toast.success(`Project "${name}" created successfully`);
+    toast.success(`Tạo dự án "${name}" thành công`);
     setLoading(false);
     onOpenChange(false);
     // Reset form
@@ -118,7 +118,7 @@ export function CreateProjectDialog({
         <div className="space-y-1">
           <label className="text-xs font-medium">Mô tả dự án</label>
           <Input
-            placeholder="Overview description of the construction project"
+            placeholder="Mô tả tổng quan về dự án thi công"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />

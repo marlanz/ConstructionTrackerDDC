@@ -5,6 +5,8 @@ import Link from "next/link";
 import { SerializedDailyReport } from "@/lib/services/dailyReport.service";
 import { SerializedInstallationTask } from "@/lib/services/installationDetail.service";
 import { SerializedProject } from "@/lib/services/project.service";
+import { formatDateWithWeekday } from "@/lib/i18n/formatters";
+import { getProjectStatusStyle } from "@/lib/status-styles";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,14 +23,12 @@ import {
   Clock,
   FileText,
   Filter,
-  HardHat,
   Plus,
   Trash2,
   Users,
   Wrench,
   Link as LinkIcon,
 } from "lucide-react";
-import { getProjectStatusStyle } from "@/lib/status-styles";
 
 interface DailyReportsViewProps {
   user: {
@@ -44,7 +44,6 @@ interface DailyReportsViewProps {
 }
 
 export function DailyReportsView({
-  user,
   project,
   reports,
   tasks,
@@ -99,10 +98,10 @@ export function DailyReportsView({
     setDeleting(false);
     setDeleteTargetId(null);
     if (res.success) {
-      toast.success("Daily site report deleted successfully");
+      toast.success("Đã xóa báo cáo nhật ký công trình thành công");
       router.refresh();
     } else {
-      toast.error(res.error || "Failed to delete daily report");
+      toast.error(res.error || "Xóa báo cáo nhật ký thất bại");
     }
   };
 
@@ -115,7 +114,7 @@ export function DailyReportsView({
             href={`/projects/${project._id}`}
             className="inline-flex items-center gap-1 text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> Back to Project Overview
+            <ArrowLeft className="h-3.5 w-3.5" /> Trở về Tổng quan dự án
           </Link>
         </div>
 
@@ -128,7 +127,7 @@ export function DailyReportsView({
               >
                 {project.projectCode}
               </Badge>
-              <Badge className={statusStyle.badgeClass}>Đang triển khai</Badge>
+              <Badge className={statusStyle.badgeClass}>{statusStyle.label}</Badge>
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-3xl">
               {project.name}
@@ -137,7 +136,7 @@ export function DailyReportsView({
 
           {isSupervisor && (
             <Button onClick={() => setModalOpen(true)} className="gap-2">
-              <Plus className="h-4 w-4" /> File Daily Report
+              <Plus className="h-4 w-4" /> Tạo báo cáo hằng ngày
             </Button>
           )}
         </div>
@@ -156,7 +155,7 @@ export function DailyReportsView({
           >
             Kế hoạch lắp đặt
           </Link>
-          <span className="text-zinc-900 font-semibold border-b-2 border-zinc-900 pb-1 dark:text-zinc-100 dark:border-zinc-100">
+          <span className="text-primary font-semibold border-b-2 border-primary pb-1">
             Báo cáo hằng ngày ({reports.length})
           </span>
         </div>
@@ -166,22 +165,22 @@ export function DailyReportsView({
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-xs dark:border-zinc-800 dark:bg-zinc-950">
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <div className="flex items-center gap-1.5 text-xs text-zinc-500 font-medium">
-            <Filter className="h-3.5 w-3.5 text-zinc-400" /> Filter Date Range:
+            <Filter className="h-3.5 w-3.5 text-zinc-400" /> Lọc theo khoảng thời gian:
           </div>
           <Input
             type="date"
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
             className="w-36 text-xs h-8"
-            placeholder="From Date"
+            placeholder="Từ ngày"
           />
-          <span className="text-xs text-zinc-400">to</span>
+          <span className="text-xs text-zinc-400">đến</span>
           <Input
             type="date"
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
             className="w-36 text-xs h-8"
-            placeholder="To Date"
+            placeholder="Đến ngày"
           />
           {(fromDate || toDate) && (
             <Button
@@ -193,13 +192,13 @@ export function DailyReportsView({
               }}
               className="h-8 text-xs text-zinc-500"
             >
-              Clear
+              Xóa lọc
             </Button>
           )}
         </div>
 
         <div className="text-xs text-zinc-500 font-mono">
-          Showing {filteredReports.length} of {reports.length} reports
+          Hiển thị {filteredReports.length} trên tổng số {reports.length} báo cáo
         </div>
       </div>
 
@@ -207,7 +206,7 @@ export function DailyReportsView({
       {filteredReports.length === 0 ? (
         <Card className="p-12 text-center text-xs text-zinc-500">
           <FileText className="mx-auto h-8 w-8 text-zinc-400 mb-2" />
-          No daily site reports found for the selected date range.
+          Không tìm thấy báo cáo nhật ký nào trong khoảng thời gian đã chọn.
         </Card>
       ) : (
         <div className="space-y-6">
@@ -223,17 +222,12 @@ export function DailyReportsView({
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
                       <Badge className="bg-zinc-900 text-zinc-50 dark:bg-zinc-50 dark:text-zinc-900 font-mono font-bold">
-                        Day {dayNumber}
+                        Ngày {dayNumber}
                       </Badge>
                       <div>
                         <CardTitle className="text-base font-bold flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-zinc-400" />
-                          {new Date(report.date).toLocaleDateString(undefined, {
-                            weekday: "short",
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}
+                          {formatDateWithWeekday(report.date)}
                         </CardTitle>
                       </div>
                     </div>
@@ -250,7 +244,7 @@ export function DailyReportsView({
                           size="icon"
                           onClick={() => setDeleteTargetId(report._id)}
                           className="h-8 w-8 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40"
-                          title="Delete report"
+                          title="Xóa báo cáo"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -264,7 +258,7 @@ export function DailyReportsView({
                       report.installationMachine.length > 0 && (
                         <div className="flex items-center gap-1.5">
                           <Wrench className="h-3.5 w-3.5 text-zinc-400" />
-                          <span className="font-medium">Machines:</span>
+                          <span className="font-medium">Thiết bị/Máy móc:</span>
                           <div className="flex flex-wrap gap-1">
                             {report.installationMachine.map((m, i) => (
                               <Badge
@@ -283,7 +277,7 @@ export function DailyReportsView({
                       report.installationPersonel.length > 0 && (
                         <div className="flex items-center gap-1.5">
                           <Users className="h-3.5 w-3.5 text-zinc-400" />
-                          <span className="font-medium">Crew:</span>
+                          <span className="font-medium">Nhân lực:</span>
                           <span>
                             {report.installationPersonel
                               .map((p) => `${p.amount} ${p.role}`)
@@ -298,7 +292,7 @@ export function DailyReportsView({
                   {/* Work Agenda Entries */}
                   <div className="space-y-4">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-                      Work Agenda ({report.workAgenda.length})
+                      Nội dung công việc ({report.workAgenda.length})
                     </h4>
 
                     {report.workAgenda.map((entry) => {
@@ -368,9 +362,9 @@ export function DailyReportsView({
       <AlertDialog
         open={!!deleteTargetId}
         onOpenChange={() => setDeleteTargetId(null)}
-        title="Delete Daily Site Report?"
-        description="Are you sure you want to delete this daily report? All associated work logs and photo records for this day will be permanently deleted."
-        confirmLabel="Delete Report"
+        title="Xóa báo cáo nhật ký công trình?"
+        description="Bạn có chắc chắn muốn xóa báo cáo hằng ngày này? Tất cả các nhật ký công việc và hình ảnh liên quan của ngày này sẽ bị xóa vĩnh viễn."
+        confirmLabel="Xóa báo cáo"
         variant="destructive"
         loading={deleting}
         onConfirm={confirmDeleteReport}

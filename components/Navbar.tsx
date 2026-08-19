@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Factory, HardHat, LogOut, User as UserIcon } from "lucide-react";
+import { Factory, LogOut } from "lucide-react";
 import { authClient } from "@/lib/auth/auth-client";
 import { useRouter } from "next/navigation";
 import { USER_ROLE_VN_LABELS, type UserRoleType } from "@/app/constants/role";
@@ -53,7 +53,7 @@ export function Navbar({ user }: NavbarProps) {
                 variant={user.role === "MANAGER" ? "default" : "secondary"}
                 className="font-mono text-[10px] tracking-wider uppercase"
               >
-                {USER_ROLE_VN_LABELS[user.role as UserRoleType]}
+                {USER_ROLE_VN_LABELS[user.role as UserRoleType] || user.role}
               </Badge>
 
               <Button
@@ -61,15 +61,15 @@ export function Navbar({ user }: NavbarProps) {
                 size="sm"
                 onClick={handleLogout}
                 className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-                title="Log out"
+                title="Đăng xuất"
               >
                 <LogOut className="h-4 w-4" />
-                <span className="sr-only">Log out</span>
+                <span className="sr-only">Đăng xuất</span>
               </Button>
             </div>
           ) : (
             <Link href="/login">
-              <Button size="sm">Log In</Button>
+              <Button size="sm">Đăng nhập</Button>
             </Link>
           )}
         </div>

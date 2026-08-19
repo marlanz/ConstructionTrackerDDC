@@ -57,13 +57,13 @@ export async function createDailyReport(
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
     }
 
     const isSupervisor = await canWriteDailyReport(user.id, projectId);
     if (!isSupervisor) {
       return fail(
-        "Only assigned supervisors can file daily reports for this project",
+        "Chỉ có giám sát viên được phân công mới có quyền tạo báo cáo hằng ngày cho dự án này",
         ERROR_CODES.FORBIDDEN
       );
     }
@@ -74,14 +74,14 @@ export async function createDailyReport(
     });
 
     if (!parsed.success) {
-      return fail(parsed.error.issues[0]?.message || "Invalid input", ERROR_CODES.VALIDATION_ERROR);
+      return fail(parsed.error.issues[0]?.message || "Dữ liệu nhập không hợp lệ", ERROR_CODES.VALIDATION_ERROR);
     }
 
     const report = await createDailyReportService(projectId, user.id, parsed.data);
     return ok(report);
   } catch (error: any) {
     console.error("Error creating daily report:", error);
-    return fail("An error occurred while creating daily report", ERROR_CODES.INTERNAL_ERROR);
+    return fail("Đã xảy ra lỗi khi tạo báo cáo hằng ngày", ERROR_CODES.INTERNAL_ERROR);
   }
 }
 
@@ -95,35 +95,35 @@ export async function addWorkAgendaEntry(
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
     }
 
     const report = await getDailyReportById(reportId);
     if (!report) {
-      return fail("Daily report not found", ERROR_CODES.NOT_FOUND);
+      return fail("Không tìm thấy báo cáo nhật ký công trình", ERROR_CODES.NOT_FOUND);
     }
 
     const isSupervisor = await canWriteDailyReport(user.id, report.projectId);
     if (!isSupervisor) {
       return fail(
-        "Only assigned supervisors can add work agenda entries to this report",
+        "Chỉ có giám sát viên được phân công mới có quyền thêm hạng mục công việc vào báo cáo này",
         ERROR_CODES.FORBIDDEN
       );
     }
 
     const parsed = workAgendaEntrySchema.safeParse(entryInput);
     if (!parsed.success) {
-      return fail(parsed.error.issues[0]?.message || "Invalid input", ERROR_CODES.VALIDATION_ERROR);
+      return fail(parsed.error.issues[0]?.message || "Dữ liệu nhập không hợp lệ", ERROR_CODES.VALIDATION_ERROR);
     }
 
     const entry = await addWorkAgendaEntryService(reportId, parsed.data);
     return ok(entry);
   } catch (error: any) {
     if (error.message === "REPORT_NOT_FOUND") {
-      return fail("Daily report not found", ERROR_CODES.NOT_FOUND);
+      return fail("Không tìm thấy báo cáo nhật ký công trình", ERROR_CODES.NOT_FOUND);
     }
     console.error("Error adding work agenda entry:", error);
-    return fail("An error occurred while adding work agenda entry", ERROR_CODES.INTERNAL_ERROR);
+    return fail("Đã xảy ra lỗi khi thêm hạng mục công việc", ERROR_CODES.INTERNAL_ERROR);
   }
 }
 
@@ -139,24 +139,24 @@ export async function uploadReportImage(
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
     }
 
     const report = await getDailyReportById(reportId);
     if (!report) {
-      return fail("Daily report not found", ERROR_CODES.NOT_FOUND);
+      return fail("Không tìm thấy báo cáo nhật ký công trình", ERROR_CODES.NOT_FOUND);
     }
 
     const isSupervisor = await canWriteDailyReport(user.id, report.projectId);
     if (!isSupervisor) {
       return fail(
-        "Only assigned supervisors can upload report images for this project",
+        "Chỉ có giám sát viên được phân công mới có quyền tải ảnh hình ảnh báo cáo cho dự án này",
         ERROR_CODES.FORBIDDEN
       );
     }
 
     if (!fileData || typeof fileData !== "string") {
-      return fail("Image file data is required", ERROR_CODES.VALIDATION_ERROR);
+      return fail("Thiếu dữ liệu tệp hình ảnh", ERROR_CODES.VALIDATION_ERROR);
     }
 
     // Upload to Cloudinary
@@ -168,10 +168,10 @@ export async function uploadReportImage(
     return ok({ url: uploadResult.url, report: updatedReport });
   } catch (error: any) {
     if (error.message === "REPORT_OR_ENTRY_NOT_FOUND") {
-      return fail("Daily report or work agenda entry not found", ERROR_CODES.NOT_FOUND);
+      return fail("Không tìm thấy báo cáo hoặc hạng mục công việc", ERROR_CODES.NOT_FOUND);
     }
     console.error("Error uploading report image:", error);
-    return fail("An error occurred while uploading report image", ERROR_CODES.INTERNAL_ERROR);
+    return fail("Đã xảy ra lỗi khi tải ảnh báo cáo lên hệ thống", ERROR_CODES.INTERNAL_ERROR);
   }
 }
 
@@ -185,35 +185,35 @@ export async function updateDailyReport(
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
     }
 
     const report = await getDailyReportById(reportId);
     if (!report) {
-      return fail("Daily report not found", ERROR_CODES.NOT_FOUND);
+      return fail("Không tìm thấy báo cáo nhật ký công trình", ERROR_CODES.NOT_FOUND);
     }
 
     const isSupervisor = await canWriteDailyReport(user.id, report.projectId);
     if (!isSupervisor) {
       return fail(
-        "Only assigned supervisors can update daily reports for this project",
+        "Chỉ có giám sát viên được phân công mới có quyền cập nhật báo cáo hằng ngày cho dự án này",
         ERROR_CODES.FORBIDDEN
       );
     }
 
     const parsed = updateDailyReportSchema.safeParse(input);
     if (!parsed.success) {
-      return fail(parsed.error.issues[0]?.message || "Invalid input", ERROR_CODES.VALIDATION_ERROR);
+      return fail(parsed.error.issues[0]?.message || "Dữ liệu nhập không hợp lệ", ERROR_CODES.VALIDATION_ERROR);
     }
 
     const updated = await updateDailyReportService(reportId, parsed.data);
     return ok(updated);
   } catch (error: any) {
     if (error.message === "REPORT_NOT_FOUND") {
-      return fail("Daily report not found", ERROR_CODES.NOT_FOUND);
+      return fail("Không tìm thấy báo cáo nhật ký công trình", ERROR_CODES.NOT_FOUND);
     }
     console.error("Error updating daily report:", error);
-    return fail("An error occurred while updating daily report", ERROR_CODES.INTERNAL_ERROR);
+    return fail("Đã xảy ra lỗi khi cập nhật báo cáo hằng ngày", ERROR_CODES.INTERNAL_ERROR);
   }
 }
 
@@ -224,18 +224,18 @@ export async function deleteDailyReport(reportId: string): Promise<Result<{ dele
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
     }
 
     const report = await getDailyReportById(reportId);
     if (!report) {
-      return fail("Daily report not found", ERROR_CODES.NOT_FOUND);
+      return fail("Không tìm thấy báo cáo nhật ký công trình", ERROR_CODES.NOT_FOUND);
     }
 
     const isSupervisor = await canWriteDailyReport(user.id, report.projectId);
     if (!isSupervisor) {
       return fail(
-        "Only assigned supervisors can delete daily reports for this project",
+        "Chỉ có giám sát viên được phân công mới có quyền xóa báo cáo hằng ngày cho dự án này",
         ERROR_CODES.FORBIDDEN
       );
     }
@@ -244,7 +244,7 @@ export async function deleteDailyReport(reportId: string): Promise<Result<{ dele
     return ok({ deleted: success });
   } catch (error: any) {
     console.error("Error deleting daily report:", error);
-    return fail("An error occurred while deleting daily report", ERROR_CODES.INTERNAL_ERROR);
+    return fail("Đã xảy ra lỗi khi xóa báo cáo hằng ngày", ERROR_CODES.INTERNAL_ERROR);
   }
 }
 
@@ -258,12 +258,12 @@ export async function listDailyReports(
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
     }
 
     const hasAccess = await canAccessProject({ id: user.id, role: user.role }, projectId);
     if (!hasAccess) {
-      return fail("Not authorized for this project", ERROR_CODES.FORBIDDEN);
+      return fail("Bạn không có quyền truy cập dự án này", ERROR_CODES.FORBIDDEN);
     }
 
     const filter: { from?: Date; to?: Date } = {};
@@ -274,7 +274,7 @@ export async function listDailyReports(
     return ok(reports);
   } catch (error: any) {
     console.error("Error listing daily reports:", error);
-    return fail("An error occurred while fetching daily reports", ERROR_CODES.INTERNAL_ERROR);
+    return fail("Đã xảy ra lỗi khi tải danh sách báo cáo hằng ngày", ERROR_CODES.INTERNAL_ERROR);
   }
 }
 
@@ -288,27 +288,27 @@ export async function getConstructionDayNumber(
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
     }
 
     const hasAccess = await canAccessProject({ id: user.id, role: user.role }, projectId);
     if (!hasAccess) {
-      return fail("Not authorized for this project", ERROR_CODES.FORBIDDEN);
+      return fail("Bạn không có quyền truy cập dự án này", ERROR_CODES.FORBIDDEN);
     }
 
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) {
-      return fail("Invalid date string", ERROR_CODES.VALIDATION_ERROR);
+      return fail("Định dạng ngày tháng không hợp lệ", ERROR_CODES.VALIDATION_ERROR);
     }
 
     const dayNumber = await getConstructionDayNumberService(projectId, date);
     return ok({ dayNumber });
   } catch (error: any) {
     if (error.message === "PROJECT_NOT_FOUND") {
-      return fail("Project not found", ERROR_CODES.NOT_FOUND);
+      return fail("Không tìm thấy dự án", ERROR_CODES.NOT_FOUND);
     }
     console.error("Error computing construction day number:", error);
-    return fail("An error occurred while computing construction day number", ERROR_CODES.INTERNAL_ERROR);
+    return fail("Đã xảy ra lỗi khi tính toán số ngày thi công", ERROR_CODES.INTERNAL_ERROR);
   }
 }
 
@@ -323,12 +323,12 @@ export async function getLatestDailyReport(
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return fail("Not authenticated", ERROR_CODES.UNAUTHENTICATED);
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
     }
 
     const hasAccess = await canAccessProject({ id: user.id, role: user.role }, projectId);
     if (!hasAccess) {
-      return fail("Not authorized for this project", ERROR_CODES.FORBIDDEN);
+      return fail("Bạn không có quyền truy cập dự án này", ERROR_CODES.FORBIDDEN);
     }
 
     const report = await getLatestDailyReportService(projectId);
@@ -350,6 +350,6 @@ export async function getLatestDailyReport(
     });
   } catch (error: any) {
     console.error("Error fetching latest daily report:", error);
-    return fail("An error occurred while fetching latest daily report", ERROR_CODES.INTERNAL_ERROR);
+    return fail("Đã xảy ra lỗi khi tải báo cáo hằng ngày mới nhất", ERROR_CODES.INTERNAL_ERROR);
   }
 }

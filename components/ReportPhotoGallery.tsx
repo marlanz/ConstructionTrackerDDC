@@ -47,13 +47,13 @@ export function ReportPhotoGallery({
           return;
         }
 
-        toast.success("Site report photo uploaded to Cloudinary successfully");
+        toast.success("Đã tải ảnh thực địa lên Cloudinary thành công");
         setUploading(false);
         router.refresh();
       };
       reader.readAsDataURL(file);
     } catch (err: any) {
-      setError(err.message || "Failed to process image file");
+      setError(err.message || "Xử lý tệp hình ảnh thất bại");
       setUploading(false);
     }
   };
@@ -78,7 +78,7 @@ export function ReportPhotoGallery({
               <AspectRatio ratio={4 / 3}>
                 <img
                   src={url}
-                  alt={`Report photo ${idx + 1}`}
+                  alt={`Ảnh báo cáo ${idx + 1}`}
                   className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
               </AspectRatio>
@@ -97,12 +97,12 @@ export function ReportPhotoGallery({
             {uploading ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin text-zinc-500" />
-                Uploading to Cloudinary...
+                Đang tải ảnh lên Cloudinary...
               </>
             ) : (
               <>
                 <Camera className="h-3.5 w-3.5 text-zinc-500" />
-                Add Photo
+                Thêm hình ảnh
               </>
             )}
             <input
@@ -121,14 +121,14 @@ export function ReportPhotoGallery({
         <DialogContent className="max-w-3xl p-2 bg-black border-zinc-800 text-white">
           <DialogHeader className="p-2 border-b border-zinc-800">
             <DialogTitle className="text-sm font-medium flex items-center gap-2">
-              <ImageIcon className="h-4 w-4" /> Site Report Photo Preview
+              <ImageIcon className="h-4 w-4" /> Xem trước hình ảnh nhật ký công trình
             </DialogTitle>
           </DialogHeader>
           {selectedImage && (
             <div className="relative flex items-center justify-center max-h-[80vh] p-2 overflow-hidden">
               <img
                 src={selectedImage}
-                alt="Full size site photo"
+                alt="Hình ảnh thực địa kích thước đầy đủ"
                 className="max-h-[75vh] w-auto max-w-full object-contain rounded-lg shadow-2xl"
               />
             </div>

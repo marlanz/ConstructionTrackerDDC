@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ProjectOverview } from "@/lib/services/project.service";
 import { LatestReportPayload } from "@/app/actions/dailyReport.actions";
 import { getProjectStatusStyle } from "@/lib/status-styles";
+import { formatDate } from "@/lib/i18n/formatters";
 import {
   Card,
   CardContent,
@@ -104,17 +105,13 @@ function CompactLatestReportCard({
 
   // ── Content state ─────────────────────────────────────────────────────────
   const { report, dayNumber, createdByName } = latestReport;
-  const reportDate = new Date(report.date).toLocaleDateString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  const reportDate = formatDate(report.date);
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <ClipboardList className="h-4 w-4" />
           </div>
           <div>
@@ -239,7 +236,7 @@ export function ProjectOverviewView({
             >
               {project.projectCode}
             </Badge>
-            <Badge className={statusStyle.badgeClass}>Đang triển khai</Badge>
+            <Badge className={statusStyle.badgeClass}>{statusStyle.label}</Badge>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-3xl">
             {project.name}
@@ -259,7 +256,7 @@ export function ProjectOverviewView({
 
       {/* Tab Navigation */}
       <div className="flex gap-4 text-sm font-medium border-b border-zinc-200 pb-2 dark:border-zinc-800">
-        <span className="text-zinc-900 font-semibold border-b-2 border-zinc-900 pb-2 dark:text-zinc-100 dark:border-zinc-100">
+        <span className="text-primary font-semibold border-b-2 border-primary pb-2">
           Tổng quan
         </span>
         <Link
@@ -306,7 +303,7 @@ export function ProjectOverviewView({
             <CardContent className="space-y-4">
               {members.length === 0 ? (
                 <div className="py-6 text-center text-xs text-zinc-500">
-                  No supervisors assigned yet.
+                  Chưa có giám sát viên nào được phân công.
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -334,7 +331,7 @@ export function ProjectOverviewView({
                       </div>
 
                       <Badge variant="outline" className="text-[10px]">
-                        {USER_ROLE_VN_LABELS[member.user?.role as UserRoleType]}
+                        {USER_ROLE_VN_LABELS[member.user?.role as UserRoleType] || member.user?.role}
                       </Badge>
                     </div>
                   ))}
@@ -353,7 +350,7 @@ export function ProjectOverviewView({
                 <CardTitle className="text-base">Quá trình lắp đặt</CardTitle>
                 <CardDescription>Tiến độ lắp đặt tổng quan</CardDescription>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <ListTodo className="h-5 w-5" />
               </div>
             </CardHeader>
@@ -441,7 +438,7 @@ export function ProjectOverviewView({
                   </span>
                   <div className="flex items-center gap-2 font-medium text-zinc-900 dark:text-zinc-100">
                     <Calendar className="h-4 w-4 text-zinc-400" />
-                    {new Date(project.startDate).toLocaleDateString()}
+                    {formatDate(project.startDate)}
                   </div>
                 </div>
 
@@ -451,7 +448,7 @@ export function ProjectOverviewView({
                   </span>
                   <div className="flex items-center gap-2 font-medium text-zinc-900 dark:text-zinc-100">
                     <Calendar className="h-4 w-4 text-zinc-400" />
-                    {new Date(project.plannedEndDate).toLocaleDateString()}
+                    {formatDate(project.plannedEndDate)}
                   </div>
                 </div>
               </div>
@@ -473,7 +470,7 @@ export function ProjectOverviewView({
                     href={project.briefPlan}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
+                    className="inline-flex items-center gap-2 text-xs font-medium text-primary hover:underline"
                   >
                     <ExternalLink className="h-3.5 w-3.5" /> File thông tin chi
                     tiết về kế hoạch

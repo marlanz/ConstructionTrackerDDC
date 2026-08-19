@@ -52,7 +52,7 @@ export function UpdateProgressModal({
       return;
     }
 
-    toast.success(`Task progress updated to ${val}%`);
+    toast.success(`Đã cập nhật tiến độ công việc thành ${val}%`);
     setLoading(false);
     onOpenChange(false);
     router.refresh();
@@ -61,7 +61,7 @@ export function UpdateProgressModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogHeader>
-        <DialogTitle>Update Work Progress</DialogTitle>
+        <DialogTitle>Cập nhật tiến độ công việc</DialogTitle>
         <DialogDescription className="line-clamp-2">
           {task.agenda}
         </DialogDescription>
@@ -76,7 +76,7 @@ export function UpdateProgressModal({
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Progression Percentage</span>
+            <span className="text-sm font-medium">Tỷ lệ phần trăm hoàn thành</span>
             <span className="font-mono text-lg font-bold">{progression}%</span>
           </div>
 
@@ -120,10 +120,10 @@ export function UpdateProgressModal({
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Hủy bỏ
           </Button>
           <Button type="submit" disabled={loading}>
-            {loading ? "Saving..." : "Save Progress"}
+            {loading ? "Đang lưu..." : "Lưu tiến độ"}
           </Button>
         </DialogFooter>
       </form>

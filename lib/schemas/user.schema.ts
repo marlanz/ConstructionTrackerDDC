@@ -4,7 +4,7 @@ export const USER_ROLES = ["MANAGER", "USER"] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
 export const setUserRoleSchema = z.object({
-  userId: z.string().min(1, "User ID is required"),
+  userId: z.string().min(1, "Thiếu ID người dùng"),
   role: z.enum(USER_ROLES),
 });
 

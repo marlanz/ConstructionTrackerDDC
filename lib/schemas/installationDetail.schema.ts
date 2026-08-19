@@ -1,22 +1,22 @@
 import { z } from "zod";
 
 export const installationToolSchema = z.object({
-  party: z.string().min(1, "Tool party/owner is required"),
-  name: z.string().min(1, "Tool name is required"),
+  party: z.string().min(1, "Vui lòng nhập đơn vị sở hữu dụng cụ"),
+  name: z.string().min(1, "Vui lòng nhập tên dụng cụ"),
 });
 
 export const installationPersonelSchema = z.object({
-  party: z.string().min(1, "Personnel party is required"),
-  role: z.string().min(1, "Personnel role is required"),
-  amount: z.number().int().min(0, "Amount must be a non-negative number"),
+  party: z.string().min(1, "Vui lòng nhập đơn vị nhân sự"),
+  role: z.string().min(1, "Vui lòng nhập chức danh nhân sự"),
+  amount: z.number().int().min(0, "Số lượng phải là số nguyên không âm"),
   note: z.string().nullable().optional().default(null),
 });
 
 export const createInstallationTaskSchema = z.object({
-  projectId: z.string().min(1, "Project ID is required"),
+  projectId: z.string().min(1, "Thiếu ID dự án"),
   sequence: z.number().int().optional(),
   sectionCode: z.string().nullable().optional().default(null),
-  agenda: z.string().min(1, "Agenda description is required").trim(),
+  agenda: z.string().min(1, "Vui lòng nhập mô tả công việc / hạng mục").trim(),
   qty: z.number().nullable().optional().default(null),
   unit: z.string().nullable().optional().default(null),
   dimension: z.string().nullable().optional().default(null),
@@ -36,13 +36,13 @@ export const updateInstallationTaskSchema = createInstallationTaskSchema
   .omit({ projectId: true });
 
 export const updateTaskProgressSchema = z.object({
-  taskId: z.string().min(1, "Task ID is required"),
-  progression: z.number().min(0, "Progression must be between 0 and 100").max(100, "Progression must be between 0 and 100"),
+  taskId: z.string().min(1, "Thiếu ID hạng mục"),
+  progression: z.number().min(0, "Tiến độ phải nằm trong khoảng từ 0% đến 100%").max(100, "Tiến độ phải nằm trong khoảng từ 0% đến 100%"),
 });
 
 export const reorderInstallationTasksSchema = z.object({
-  projectId: z.string().min(1, "Project ID is required"),
-  orderedTaskIds: z.array(z.string().min(1, "Task ID cannot be empty")).min(1, "At least one task ID is required"),
+  projectId: z.string().min(1, "Thiếu ID dự án"),
+  orderedTaskIds: z.array(z.string().min(1, "ID hạng mục không được để trống")).min(1, "Phải có ít nhất một hạng mục"),
 });
 
 export type CreateInstallationTaskInput = z.infer<typeof createInstallationTaskSchema>;

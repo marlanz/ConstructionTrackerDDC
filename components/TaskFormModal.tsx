@@ -118,7 +118,7 @@ export function TaskFormModal({
   const handleAddPersonnel = () => {
     setPersonnel([
       ...personnel,
-      { party: "CONTRACTOR", role: "Worker", amount: 1, note: "" },
+      { party: "CONTRACTOR", role: "Công nhân", amount: 1, note: "" },
     ]);
   };
 
@@ -169,8 +169,8 @@ export function TaskFormModal({
 
     toast.success(
       isEditing
-        ? "Work item task updated successfully"
-        : "New work item task added to plan",
+        ? "Cập nhật chi tiết hạng mục lắp đặt thành công"
+        : "Đã thêm hạng mục lắp đặt mới vào kế hoạch",
     );
     setLoading(false);
     onOpenChange(false);
@@ -181,10 +181,10 @@ export function TaskFormModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogHeader>
         <DialogTitle>
-          {isEditing ? "Edit Work Item Task" : "Add New Installation Work Item"}
+          {isEditing ? "Chỉnh sửa hạng mục công việc" : "Thêm hạng mục lắp đặt mới"}
         </DialogTitle>
         <DialogDescription>
-          Specify plan details, machinery, personnel, and target dates.
+          Nhập chi tiết kế hoạch, thiết bị, nhân lực và thời hạn hoàn thành.
         </DialogDescription>
       </DialogHeader>
 
@@ -201,21 +201,20 @@ export function TaskFormModal({
         <div className="">
           <div className="space-y-1 sm:col-span-2">
             <label className="text-xs font-medium">
-              Agenda / Work Description *
+              Mô tả / Hạng mục công việc *
             </label>
             <Input
-              placeholder="e.g. Lắp đặt dầm cầu trục 25T"
+              placeholder="VD: Lắp đặt dầm cầu trục 25T"
               value={agenda}
               onChange={(e) => setAgenda(e.target.value)}
               required
-              multiple
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="space-y-1">
-            <label className="text-xs font-medium">Quantity</label>
+            <label className="text-xs font-medium">Số lượng</label>
             <Input
               type="number"
               placeholder="1"
@@ -224,7 +223,7 @@ export function TaskFormModal({
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-medium">Unit</label>
+            <label className="text-xs font-medium">Đơn vị</label>
             <Input
               placeholder="bộ / kiện / 件"
               value={unit}
@@ -232,9 +231,9 @@ export function TaskFormModal({
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-medium">Location</label>
+            <label className="text-xs font-medium">Vị trí lắp đặt</label>
             <Input
-              placeholder="Layout ref, e.g. F8-F9"
+              placeholder="VD: Trục F8-F9"
               value={installationLocation}
               onChange={(e) => setInstallationLocation(e.target.value)}
             />
@@ -243,7 +242,7 @@ export function TaskFormModal({
 
         <div className="space-y-1">
           <label className="text-xs font-medium">
-            Equipments (comma separated)
+            Thiết bị lắp đặt (phân cách bằng dấu phẩy)
           </label>
           <Input
             placeholder="Cẩu 25T, Máy hàn MIG, Xe nâng 5T"
@@ -254,7 +253,7 @@ export function TaskFormModal({
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="space-y-1">
-            <label className="text-xs font-medium">Planned Start *</label>
+            <label className="text-xs font-medium">Kế hoạch Bắt đầu *</label>
             <Input
               type="date"
               value={plannedStartDate}
@@ -263,7 +262,7 @@ export function TaskFormModal({
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-medium">Planned End *</label>
+            <label className="text-xs font-medium">Kế hoạch Kết thúc *</label>
             <Input
               type="date"
               value={plannedEndDate}
@@ -272,9 +271,9 @@ export function TaskFormModal({
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-medium">Display Period</label>
+            <label className="text-xs font-medium">Thời hạn thi công</label>
             <Input
-              placeholder="e.g. 6 ngày"
+              placeholder="VD: 6 ngày"
               value={installationPeriod}
               onChange={(e) => setInstallationPeriod(e.target.value)}
             />
@@ -285,7 +284,7 @@ export function TaskFormModal({
         <div className="space-y-2 border-t border-zinc-100 pt-3 dark:border-zinc-800">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-              Installation Tools ({tools.length})
+              Dụng cụ lắp đặt ({tools.length})
             </span>
             <Button
               type="button"
@@ -294,14 +293,14 @@ export function TaskFormModal({
               onClick={handleAddTool}
               className="h-7 text-xs"
             >
-              <Plus className="h-3 w-3 mr-1" /> Add Tool
+              <Plus className="h-3 w-3 mr-1" /> Thêm dụng cụ
             </Button>
           </div>
 
           {tools.map((tool, idx) => (
             <div key={idx} className="flex gap-2 items-center">
               <Input
-                placeholder="Party (e.g. CONTRACTOR)"
+                placeholder="Đơn vị (VD: CONTRACTOR)"
                 value={tool.party}
                 onChange={(e) => {
                   const updated = [...tools];
@@ -311,7 +310,7 @@ export function TaskFormModal({
                 className="w-1/3"
               />
               <Input
-                placeholder="Tool Name"
+                placeholder="Tên dụng cụ"
                 value={tool.name}
                 onChange={(e) => {
                   const updated = [...tools];
@@ -337,7 +336,7 @@ export function TaskFormModal({
         <div className="space-y-2 border-t border-zinc-100 pt-3 dark:border-zinc-800">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-              Personnel Allocation ({personnel.length})
+              Phân công nhân sự ({personnel.length})
             </span>
             <Button
               type="button"
@@ -346,14 +345,14 @@ export function TaskFormModal({
               onClick={handleAddPersonnel}
               className="h-7 text-xs"
             >
-              <Plus className="h-3 w-3 mr-1" /> Add Personnel
+              <Plus className="h-3 w-3 mr-1" /> Thêm nhân sự
             </Button>
           </div>
 
           {personnel.map((p, idx) => (
             <div key={idx} className="flex gap-2 items-center">
               <Input
-                placeholder="Party"
+                placeholder="Đơn vị (Party)"
                 value={p.party}
                 onChange={(e) => {
                   const updated = [...personnel];
@@ -363,7 +362,7 @@ export function TaskFormModal({
                 className="w-1/4"
               />
               <Input
-                placeholder="Role"
+                placeholder="Chức danh / Vai trò"
                 value={p.role}
                 onChange={(e) => {
                   const updated = [...personnel];
@@ -374,7 +373,7 @@ export function TaskFormModal({
               />
               <Input
                 type="number"
-                placeholder="Amount"
+                placeholder="Số lượng"
                 value={p.amount}
                 onChange={(e) => {
                   const updated = [...personnel];
@@ -402,10 +401,10 @@ export function TaskFormModal({
             variant="outline"
             onClick={() => onOpenChange(false)}
           >
-            Cancel
+            Hủy bỏ
           </Button>
           <Button type="submit" disabled={loading}>
-            {loading ? "Saving..." : isEditing ? "Update Item" : "Create Item"}
+            {loading ? "Đang lưu..." : isEditing ? "Cập nhật" : "Tạo mới"}
           </Button>
         </DialogFooter>
       </form>

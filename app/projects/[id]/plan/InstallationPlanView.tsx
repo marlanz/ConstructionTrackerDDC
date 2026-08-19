@@ -4,6 +4,8 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { SerializedInstallationTask } from "@/lib/services/installationDetail.service";
 import { SerializedProject } from "@/lib/services/project.service";
+import { formatDate } from "@/lib/i18n/formatters";
+import { getProjectStatusStyle } from "@/lib/status-styles";
 import {
   Table,
   TableBody,
@@ -32,7 +34,6 @@ import {
   Search,
   SlidersHorizontal,
 } from "lucide-react";
-import { getProjectStatusStyle } from "@/lib/status-styles";
 
 interface InstallationPlanViewProps {
   user: {
@@ -145,7 +146,7 @@ export function InstallationPlanView({
               >
                 {project.projectCode}
               </Badge>
-              <Badge className={statusStyle.badgeClass}>Đang triển khai</Badge>
+              <Badge className={statusStyle.badgeClass}>{statusStyle.label}</Badge>
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-3xl">
               {project.name}
@@ -173,7 +174,7 @@ export function InstallationPlanView({
           >
             Tổng quan
           </Link>
-          <span className="text-zinc-900 font-semibold border-b-2 border-zinc-900 pb-1 dark:text-zinc-100 dark:border-zinc-100">
+          <span className="text-primary font-semibold border-b-2 border-primary pb-1">
             Kế hoạch lắp đặt ({tasks.length})
           </span>
           <Link
@@ -201,14 +202,15 @@ export function InstallationPlanView({
               <div>
                 <div className="text-zinc-400">Tổng cộng</div>
                 <div className="text-lg font-bold font-mono text-zinc-900 dark:text-zinc-100">
-                  {tasks.length < 10 && `0${tasks.length}`}
+                  {tasks.length < 10 ? `0${tasks.length}` : tasks.length}
                 </div>
               </div>
               <div>
                 <div className="text-zinc-400">Đã hoàn thành</div>
                 <div className="text-lg font-bold font-mono text-emerald-600 dark:text-emerald-400">
-                  {tasks.filter((t) => t.progression >= 100).length < 10 &&
-                    `0${tasks.filter((t) => t.progression >= 100).length}`}
+                  {tasks.filter((t) => t.progression >= 100).length < 10
+                    ? `0${tasks.filter((t) => t.progression >= 100).length}`
+                    : tasks.filter((t) => t.progression >= 100).length}
                 </div>
               </div>
             </div>
@@ -221,7 +223,7 @@ export function InstallationPlanView({
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-zinc-400" />
           <Input
-            placeholder="Search work item, location, equipment..."
+            placeholder="Tìm kiếm hạng mục, vị trí, thiết bị..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 text-xs"
@@ -231,16 +233,16 @@ export function InstallationPlanView({
         {uniqueSections.length > 0 && (
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <SlidersHorizontal className="h-4 w-4 text-zinc-400" />
-            <span className="text-xs text-zinc-500">Section:</span>
+            <span className="text-xs text-zinc-500">Hạng mục:</span>
             <select
               value={sectionFilter}
               onChange={(e) => setSectionFilter(e.target.value)}
               className="rounded-md border border-zinc-200 bg-white px-2.5 py-1 text-xs text-zinc-900 shadow-sm focus:outline-none dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
             >
-              <option value="ALL">All Sections ({tasks.length})</option>
+              <option value="ALL">Tất cả hạng mục ({tasks.length})</option>
               {uniqueSections.map((sec) => (
                 <option key={sec} value={sec}>
-                  Section {sec}
+                  Hạng mục {sec}
                 </option>
               ))}
             </select>
@@ -252,20 +254,20 @@ export function InstallationPlanView({
       {filteredTasks.length === 0 ? (
         <Card className="p-12 text-center text-xs text-zinc-500">
           <ListTodo className="mx-auto h-8 w-8 text-zinc-400 mb-2" />
-          No installation work items match your search or filter.
+          Không có hạng mục lắp đặt nào phù hợp với tìm kiếm hoặc bộ lọc.
         </Card>
       ) : (
         <Card className="overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
-                {isSupervisor && <TableHead className="w-16">Seq</TableHead>}
+                {isSupervisor && <TableHead className="w-16">Thứ tự</TableHead>}
                 <TableHead className="w-20">STT</TableHead>
-                <TableHead className="w-100">Work Item (Agenda)</TableHead>
-                <TableHead>Location & Equipments</TableHead>
-                <TableHead>Dates</TableHead>
-                <TableHead className="w-36">Progress</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="w-100">Hạng mục công việc</TableHead>
+                <TableHead>Vị trí & Thiết bị</TableHead>
+                <TableHead>Thời gian</TableHead>
+                <TableHead className="w-36">Tiến độ</TableHead>
+                <TableHead className="text-right">Thao tác</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -281,8 +283,8 @@ export function InstallationPlanView({
                           <button
                             disabled={idx === 0 || reordering}
                             onClick={() => handleMoveSequence(idx, "up")}
-                            className="p-0.5 text-zinc-400 hover:text-zinc-900 disabled:opacity-30 dark:hover:text-zinc-100"
-                            title="Move Up"
+                            className="p-0.5 text-zinc-400 hover:text-zinc-900 disabled:opacity-30 dark:hover:text-zinc-100 cursor-pointer"
+                            title="Di chuyển lên"
                           >
                             <ArrowUp className="h-3 w-3" />
                           </button>
@@ -291,8 +293,8 @@ export function InstallationPlanView({
                               idx === filteredTasks.length - 1 || reordering
                             }
                             onClick={() => handleMoveSequence(idx, "down")}
-                            className="p-0.5 text-zinc-400 hover:text-zinc-900 disabled:opacity-30 dark:hover:text-zinc-100"
-                            title="Move Down"
+                            className="p-0.5 text-zinc-400 hover:text-zinc-900 disabled:opacity-30 dark:hover:text-zinc-100 cursor-pointer"
+                            title="Di chuyển xuống"
                           >
                             <ArrowDown className="h-3 w-3" />
                           </button>
@@ -362,10 +364,10 @@ export function InstallationPlanView({
                   {/* Planned Dates */}
                   <TableCell className="text-xs">
                     <div className="text-zinc-700 dark:text-zinc-300">
-                      {new Date(task.plannedStartDate).toLocaleDateString()}
+                      {formatDate(task.plannedStartDate)}
                     </div>
                     <div className="text-zinc-400 text-[11px]">
-                      to {new Date(task.plannedEndDate).toLocaleDateString()}
+                      đến {formatDate(task.plannedEndDate)}
                     </div>
                   </TableCell>
 
@@ -382,9 +384,9 @@ export function InstallationPlanView({
                               setTaskForProgress(task);
                               setProgressModalOpen(true);
                             }}
-                            className="text-[10px] text-blue-600 hover:underline dark:text-blue-400 font-medium"
+                            className="text-[10px] text-primary hover:underline font-medium cursor-pointer"
                           >
-                            Update
+                            Cập nhật
                           </button>
                         )}
                       </div>
@@ -403,7 +405,7 @@ export function InstallationPlanView({
                           setFormModalOpen(true);
                         }}
                         className="h-8 w-8 text-zinc-500 hover:text-zinc-900"
-                        title="Edit task details"
+                        title="Chỉnh sửa chi tiết hạng mục"
                       >
                         <Edit2 className="h-4 w-4" />
                       </Button>

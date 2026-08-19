@@ -11,6 +11,7 @@ import { ProjectMemberWithUser } from "@/lib/services/projectMember.service";
 import { useRouter } from "next/navigation";
 import { UserPlus, Trash2, UserCheck } from "lucide-react";
 import { toast } from "sonner";
+import { USER_ROLE_VN_LABELS, UserRoleType } from "@/app/constants/role";
 
 interface MemberManagementModalProps {
   open: boolean;
@@ -53,7 +54,7 @@ export function MemberManagementModal({
       return;
     }
 
-    toast.success("Supervisor assigned to project successfully");
+    toast.success("Đã phân công giám sát viên vào dự án thành công");
     setNewUserId("");
     setLoading(false);
     router.refresh();
@@ -71,7 +72,7 @@ export function MemberManagementModal({
       return;
     }
 
-    toast.success(`Removed ${removeTarget.name} from project supervisors`);
+    toast.success(`Đã xóa ${removeTarget.name} khỏi danh sách giám sát viên`);
     setRemoving(false);
     setRemoveTarget(null);
     router.refresh();
@@ -83,10 +84,10 @@ export function MemberManagementModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserCheck className="h-5 w-5 text-zinc-700 dark:text-zinc-300" />
-            Project Member Management
+            Quản lý thành viên dự án
           </DialogTitle>
           <DialogDescription>
-            Assigned Supervisors for <span className="font-semibold text-zinc-900 dark:text-zinc-100">{projectName}</span>
+            Các giám sát viên được phân công cho <span className="font-semibold text-zinc-900 dark:text-zinc-100">{projectName}</span>
           </DialogDescription>
         </DialogHeader>
 
@@ -100,18 +101,18 @@ export function MemberManagementModal({
           {isManager && (
             <form onSubmit={handleAddMember} className="rounded-lg border border-zinc-200 bg-zinc-50/50 p-3 dark:border-zinc-800 dark:bg-zinc-900/50 space-y-2">
               <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
-                <UserPlus className="h-3.5 w-3.5" /> Assign New Supervisor (Enter User ID)
+                <UserPlus className="h-3.5 w-3.5" /> Phân công Giám sát viên mới (Nhập ID Người dùng)
               </label>
               <div className="flex gap-2">
                 <Input
-                  placeholder="e.g. 665f10000000000000000001"
+                  placeholder="VD: 665f10000000000000000001"
                   value={newUserId}
                   onChange={(e) => setNewUserId(e.target.value)}
                   required
                   className="bg-white dark:bg-zinc-950"
                 />
                 <Button type="submit" size="sm" disabled={loading}>
-                  Assign
+                  Phân công
                 </Button>
               </div>
             </form>
@@ -119,12 +120,12 @@ export function MemberManagementModal({
 
           <div className="space-y-2">
             <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-              Current Members ({members.length})
+              Thành viên hiện tại ({members.length})
             </h4>
 
             {members.length === 0 ? (
               <div className="rounded-md border border-dashed border-zinc-200 p-6 text-center text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-                No supervisors assigned to this project yet.
+                Chưa có giám sát viên nào được phân công cho dự án này.
               </div>
             ) : (
               <div className="divide-y divide-zinc-100 rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800 overflow-hidden">
@@ -154,7 +155,7 @@ export function MemberManagementModal({
 
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-[10px]">
-                          SUPERVISOR
+                          {USER_ROLE_VN_LABELS[member.user?.role as UserRoleType] || "Giám sát viên"}
                         </Badge>
                         {isManager && (
                           <Button
@@ -162,7 +163,7 @@ export function MemberManagementModal({
                             size="icon"
                             onClick={() => setRemoveTarget({ id: member._id, name: displayName })}
                             className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40"
-                            title="Remove member"
+                            title="Xóa thành viên"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -178,7 +179,7 @@ export function MemberManagementModal({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Close
+            Đóng
           </Button>
         </DialogFooter>
       </Dialog>
@@ -187,9 +188,9 @@ export function MemberManagementModal({
       <AlertDialog
         open={!!removeTarget}
         onOpenChange={() => setRemoveTarget(null)}
-        title="Remove Supervisor from Project?"
-        description={`Are you sure you want to remove ${removeTarget?.name}? They will no longer be able to file daily reports or edit tasks for this project.`}
-        confirmLabel="Remove Supervisor"
+        title="Xóa giám sát viên khỏi dự án?"
+        description={`Bạn có chắc chắn muốn xóa ${removeTarget?.name}? Họ sẽ không thể gửi báo cáo hằng ngày hoặc chỉnh sửa công việc cho dự án này nữa.`}
+        confirmLabel="Xóa giám sát viên"
         variant="destructive"
         loading={removing}
         onConfirm={confirmRemoveMember}

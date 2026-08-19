@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { SerializedProject } from "@/lib/services/project.service";
 import { getProjectStatusStyle } from "@/lib/status-styles";
+import { formatDate } from "@/lib/i18n/formatters";
 import {
   Card,
   CardContent,
@@ -14,7 +15,6 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { CreateProjectDialog } from "@/components/CreateProjectDialog";
 import {
   Building2,
@@ -57,7 +57,7 @@ export function DashboardView({ user, projects }: DashboardViewProps) {
         {isManager && (
           <Button
             onClick={() => setCreateDialogOpen(true)}
-            className="gap-2 bg-brand hover:bg-brand"
+            className="gap-2"
           >
             <Plus className="h-4 w-4" /> Tạo dự án mới
           </Button>
@@ -71,12 +71,12 @@ export function DashboardView({ user, projects }: DashboardViewProps) {
             <FolderKanban className="h-6 w-6" />
           </div>
           <h3 className="font-semibold text-lg text-zinc-900 dark:text-zinc-100">
-            No projects found
+            Không tìm thấy dự án
           </h3>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400 max-w-sm">
             {isManager
-              ? "Get started by creating your first construction project."
-              : "You are not assigned to any construction projects yet."}
+              ? "Bắt đầu bằng cách tạo dự án đầu tiên của bạn."
+              : "Bạn chưa được phân công vào dự án nào."}
           </p>
           {isManager && (
             <Button
@@ -106,7 +106,7 @@ export function DashboardView({ user, projects }: DashboardViewProps) {
                       {project.projectCode}
                     </Badge>
                     <Badge className={statusStyle.badgeClass}>
-                      Đang triển khai
+                      {statusStyle.label}
                     </Badge>
                   </div>
 
@@ -115,7 +115,7 @@ export function DashboardView({ user, projects }: DashboardViewProps) {
                       {project.name}
                     </CardTitle>
                     <CardDescription className="line-clamp-2 mt-1">
-                      {project.description || "No description provided."}
+                      {project.description || "Chưa có mô tả."}
                     </CardDescription>
                   </div>
                 </CardHeader>
@@ -138,8 +138,7 @@ export function DashboardView({ user, projects }: DashboardViewProps) {
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 shrink-0 text-zinc-400" />
                     <span className="text-sm">
-                      {new Date(project.startDate).toLocaleDateString()} —{" "}
-                      {new Date(project.plannedEndDate).toLocaleDateString()}
+                      {formatDate(project.startDate)} — {formatDate(project.plannedEndDate)}
                     </span>
                   </div>
                 </CardContent>

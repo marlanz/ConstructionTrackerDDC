@@ -9,6 +9,7 @@ import { SerializedInstallationTask } from "@/lib/services/installationDetail.se
 import { useRouter } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { formatDate } from "@/lib/i18n/formatters";
 
 interface CreateReportModalProps {
   open: boolean;
@@ -32,8 +33,8 @@ export function CreateReportModal({
   const [machineryText, setMachineryText] = useState("");
 
   const [personnel, setPersonnel] = useState<{ party: string; role: string; amount: number; note: string }[]>([
-    { party: "CONTRACTOR", role: "Supervisor", amount: 1, note: "" },
-    { party: "CONTRACTOR", role: "Worker", amount: 4, note: "" },
+    { party: "CONTRACTOR", role: "Giám sát", amount: 1, note: "" },
+    { party: "CONTRACTOR", role: "Công nhân", amount: 4, note: "" },
   ]);
 
   const [agendaEntries, setAgendaEntries] = useState<{ title: string; description: string; taskId: string }[]>([
@@ -44,7 +45,7 @@ export function CreateReportModal({
   const [error, setError] = useState<string | null>(null);
 
   const handleAddPersonnel = () => {
-    setPersonnel([...personnel, { party: "CONTRACTOR", role: "Worker", amount: 1, note: "" }]);
+    setPersonnel([...personnel, { party: "CONTRACTOR", role: "Công nhân", amount: 1, note: "" }]);
   };
 
   const handleRemovePersonnel = (idx: number) => {
@@ -79,7 +80,7 @@ export function CreateReportModal({
       }));
 
     if (formattedAgenda.length === 0) {
-      setError("Please add at least one work agenda entry for the report.");
+      setError("Vui lòng thêm ít nhất một mục công việc cho báo cáo.");
       setLoading(false);
       return;
     }
@@ -101,7 +102,7 @@ export function CreateReportModal({
       return;
     }
 
-    toast.success(`Daily report for ${date} submitted successfully`);
+    toast.success(`Đã gửi báo cáo ngày ${formatDate(date)} thành công`);
     setLoading(false);
     onOpenChange(false);
     // Reset form
@@ -114,9 +115,9 @@ export function CreateReportModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogHeader>
-        <DialogTitle>File Site Daily Report</DialogTitle>
+        <DialogTitle>Tạo báo cáo nhật ký công trình hàng ngày</DialogTitle>
         <DialogDescription>
-          Record daily site log, working hours, crew, machinery, and work items.
+          Ghi nhận nhật ký thi công hàng ngày, giờ làm việc, nhân lực, thiết bị và các mục công việc.
         </DialogDescription>
       </DialogHeader>
 
@@ -129,7 +130,7 @@ export function CreateReportModal({
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="space-y-1">
-            <label className="text-xs font-medium">Report Date *</label>
+            <label className="text-xs font-medium">Ngày báo cáo *</label>
             <Input
               type="date"
               value={date}
@@ -139,7 +140,7 @@ export function CreateReportModal({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium">Start Time *</label>
+            <label className="text-xs font-medium">Giờ bắt đầu *</label>
             <Input
               type="time"
               value={workStartTime}
@@ -149,7 +150,7 @@ export function CreateReportModal({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium">End Time *</label>
+            <label className="text-xs font-medium">Giờ kết thúc *</label>
             <Input
               type="time"
               value={workEndTime}
@@ -160,7 +161,7 @@ export function CreateReportModal({
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs font-medium">Machinery / Equipment Used (comma separated)</label>
+          <label className="text-xs font-medium">Máy móc / Thiết bị sử dụng (phân cách bằng dấu phẩy)</label>
           <Input
             placeholder="Cẩu 25T, Máy hàn MIG, Xe nâng 5T"
             value={machineryText}
@@ -172,17 +173,17 @@ export function CreateReportModal({
         <div className="space-y-2 border-t border-zinc-100 pt-3 dark:border-zinc-800">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-              Site Crew / Personnel ({personnel.length})
+              Nhân sự / Lực lượng thi công ({personnel.length})
             </span>
             <Button type="button" variant="outline" size="sm" onClick={handleAddPersonnel} className="h-7 text-xs">
-              <Plus className="h-3 w-3 mr-1" /> Add Crew
+              <Plus className="h-3 w-3 mr-1" /> Thêm nhân sự
             </Button>
           </div>
 
           {personnel.map((p, idx) => (
             <div key={idx} className="flex gap-2 items-center">
               <Input
-                placeholder="Party"
+                placeholder="Đơn vị (Party)"
                 value={p.party}
                 onChange={(e) => {
                   const updated = [...personnel];
@@ -192,7 +193,7 @@ export function CreateReportModal({
                 className="w-1/4"
               />
               <Input
-                placeholder="Role"
+                placeholder="Chức danh / Vai trò"
                 value={p.role}
                 onChange={(e) => {
                   const updated = [...personnel];
@@ -203,7 +204,7 @@ export function CreateReportModal({
               />
               <Input
                 type="number"
-                placeholder="Count"
+                placeholder="Số lượng"
                 value={p.amount}
                 onChange={(e) => {
                   const updated = [...personnel];
@@ -229,10 +230,10 @@ export function CreateReportModal({
         <div className="space-y-3 border-t border-zinc-100 pt-3 dark:border-zinc-800">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-              Work Agenda Items ({agendaEntries.length}) *
+              Các hạng mục công việc ({agendaEntries.length}) *
             </span>
             <Button type="button" variant="outline" size="sm" onClick={handleAddAgenda} className="h-7 text-xs">
-              <Plus className="h-3 w-3 mr-1" /> Add Agenda Item
+              <Plus className="h-3 w-3 mr-1" /> Thêm mục công việc
             </Button>
           </div>
 
@@ -243,7 +244,7 @@ export function CreateReportModal({
             >
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-semibold text-zinc-500">
-                  Item #{idx + 1}
+                  Mục #{idx + 1}
                 </span>
                 {agendaEntries.length > 1 && (
                   <button
@@ -251,13 +252,13 @@ export function CreateReportModal({
                     onClick={() => handleRemoveAgenda(idx)}
                     className="text-red-500 text-xs hover:underline flex items-center gap-1"
                   >
-                    <Trash2 className="h-3.5 w-3.5" /> Remove
+                    <Trash2 className="h-3.5 w-3.5" /> Xóa
                   </button>
                 )}
               </div>
 
               <Input
-                placeholder="Work Agenda Title (e.g. Thi công nền móng buồng phun bi)"
+                placeholder="Tiêu đề công việc (VD: Thi công nền móng buồng phun bi)"
                 value={item.title}
                 onChange={(e) => {
                   const updated = [...agendaEntries];
@@ -268,7 +269,7 @@ export function CreateReportModal({
               />
 
               <Input
-                placeholder="Description / Notes (optional)"
+                placeholder="Mô tả / Ghi chú (không bắt buộc)"
                 value={item.description}
                 onChange={(e) => {
                   const updated = [...agendaEntries];
@@ -280,7 +281,7 @@ export function CreateReportModal({
               {tasks.length > 0 && (
                 <div className="space-y-1">
                   <label className="text-[10px] text-zinc-500">
-                    Link to WBS Installation Plan Task (optional)
+                    Liên kết tới công việc trong Kế hoạch WBS (không bắt buộc)
                   </label>
                   <select
                     value={item.taskId}
@@ -291,7 +292,7 @@ export function CreateReportModal({
                     }}
                     className="w-full rounded-md border border-zinc-200 bg-white p-1.5 text-xs text-zinc-900 shadow-sm focus:outline-none dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
                   >
-                    <option value="">-- No linked task --</option>
+                    <option value="">-- Không liên kết công việc --</option>
                     {tasks.map((t) => (
                       <option key={t._id} value={t._id}>
                         [{t.sectionCode || "WBS"}] {t.agenda} ({t.progression}%)
@@ -306,10 +307,10 @@ export function CreateReportModal({
 
         <DialogFooter className="pt-3 border-t border-zinc-100 dark:border-zinc-800">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Hủy bỏ
           </Button>
           <Button type="submit" disabled={loading}>
-            {loading ? "Submitting..." : "Submit Daily Report"}
+            {loading ? "Đang gửi..." : "Gửi báo cáo nhật ký"}
           </Button>
         </DialogFooter>
       </form>

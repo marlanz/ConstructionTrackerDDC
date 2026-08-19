@@ -21,8 +21,8 @@ export function AlertDialog({
   onOpenChange,
   title,
   description,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
+  confirmLabel = "Xác nhận",
+  cancelLabel = "Hủy bỏ",
   variant = "destructive",
   onConfirm,
   loading = false,
@@ -67,7 +67,7 @@ export function AlertDialog({
             disabled={loading}
             onClick={onConfirm}
           >
-            {loading ? "Processing..." : confirmLabel}
+            {loading ? "Đang xử lý..." : confirmLabel}
           </Button>
         </div>
       </div>
