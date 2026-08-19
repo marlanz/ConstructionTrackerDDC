@@ -88,7 +88,11 @@ function CompactLatestReportCard({
             </div>
           </div>
           <Link href={reportsHref} className="block">
-            <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full gap-1.5 text-xs"
+            >
               Xem tất cả báo cáo
               <ArrowRight className="h-3.5 w-3.5" />
             </Button>
@@ -115,10 +119,15 @@ function CompactLatestReportCard({
           </div>
           <div>
             <CardTitle className="text-base">Báo cáo mới nhất</CardTitle>
-            <CardDescription className="text-[11px]">Báo cáo hiện trường</CardDescription>
+            <CardDescription className="text-[11px]">
+              Báo cáo hiện trường
+            </CardDescription>
           </div>
         </div>
-        <Badge variant="secondary" className="text-[11px] font-semibold shrink-0">
+        <Badge
+          variant="secondary"
+          className="text-[11px] font-semibold shrink-0"
+        >
           Ngày {dayNumber}
         </Badge>
       </CardHeader>
@@ -140,7 +149,10 @@ function CompactLatestReportCard({
           <div className="flex items-center gap-1.5 pt-1.5 border-t border-zinc-200/60 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400">
             <UserCheck className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
             <span className="truncate">
-              Người báo cáo: <strong className="font-semibold text-zinc-800 dark:text-zinc-200">{createdByName}</strong>
+              Người báo cáo:{" "}
+              <strong className="font-semibold text-zinc-800 dark:text-zinc-200">
+                {createdByName}
+              </strong>
             </span>
           </div>
         </div>
@@ -177,7 +189,11 @@ function CompactLatestReportCard({
 
         {/* View All Link */}
         <Link href={reportsHref} className="block">
-          <Button variant="outline" size="sm" className="w-full justify-between text-xs">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full justify-between text-xs"
+          >
             <span>Xem tất cả báo cáo</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </Button>
@@ -268,10 +284,129 @@ export function ProjectOverviewView({
             latestReport={latestReport}
             projectId={project._id}
           />
+          {/* Card 3: Project Members (Relocated here from right column) */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle className="text-base">
+                  Danh sách thành viên dự án
+                </CardTitle>
+              </div>
+              {isManager && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setMemberModalOpen(true)}
+                >
+                  Quản lý
+                </Button>
+              )}
+            </CardHeader>
+
+            <CardContent className="space-y-4">
+              {members.length === 0 ? (
+                <div className="py-6 text-center text-xs text-zinc-500">
+                  No supervisors assigned yet.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {members.map((member) => (
+                    <div
+                      key={member._id}
+                      className="flex items-center justify-between rounded-lg border border-zinc-100 p-3 dark:border-zinc-800"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-100 font-semibold text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                          {member.user?.name
+                            ? member.user.name.charAt(0).toUpperCase()
+                            : "U"}
+                        </div>
+                        <div>
+                          <div className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                            {member.user?.name || member.userId}
+                          </div>
+                          {member.user?.email && (
+                            <div className="text-[11px] text-zinc-500">
+                              {member.user.email}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <Badge variant="outline" className="text-[10px]">
+                        {USER_ROLE_VN_LABELS[member.user?.role as UserRoleType]}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {/* Left Column in DOM / Order 2 on mobile: Project Details, Task Progress, Members */}
         <div className="order-2 lg:order-1 lg:col-span-2 space-y-6">
+          {/* Card 2: Task Progress Summary */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle className="text-base">Quá trình lắp đặt</CardTitle>
+                <CardDescription>Tiến độ lắp đặt tổng quan</CardDescription>
+              </div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                <ListTodo className="h-5 w-5" />
+              </div>
+            </CardHeader>
+
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                    Tiến độ dự án
+                  </span>
+                  <span className="font-bold text-zinc-900 dark:text-zinc-50 font-mono">
+                    {taskSummary.avgProgression}%
+                  </span>
+                </div>
+                <Progress
+                  value={taskSummary.avgProgression}
+                  className="h-2.5"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900/50">
+                <div className="space-y-1">
+                  <span className="text-xs text-zinc-500">
+                    Tổng mục lắp đặt
+                  </span>
+                  <div className="text-xl font-bold font-mono text-zinc-900 dark:text-zinc-100">
+                    {taskSummary.totalTasks}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-xs text-zinc-500">
+                    Đã hoàn thành (100%)
+                  </span>
+                  <div className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                    <CheckCircle2 className="h-4 w-4" />
+                    {taskSummary.completedTasks}
+                  </div>
+                </div>
+              </div>
+
+              <Link href={`/projects/${project._id}/plan`} className="block">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-between"
+                >
+                  Mở kế hoạch chi tiết lắp đặt
+                  <ListTodo className="h-4 w-4" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
           {/* Card 1: Project Details */}
           <Card>
             <CardHeader>
@@ -347,127 +482,6 @@ export function ProjectOverviewView({
               )}
             </CardContent>
           </Card>
-
-          {/* Card 2: Task Progress Summary */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <div>
-                <CardTitle className="text-base">Quá trình lắp đặt</CardTitle>
-                <CardDescription>Tiến độ lắp đặt tổng quan</CardDescription>
-              </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                <ListTodo className="h-5 w-5" />
-              </div>
-            </CardHeader>
-
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium text-zinc-700 dark:text-zinc-300">
-                    Tiến độ dự án
-                  </span>
-                  <span className="font-bold text-zinc-900 dark:text-zinc-50 font-mono">
-                    {taskSummary.avgProgression}%
-                  </span>
-                </div>
-                <Progress
-                  value={taskSummary.avgProgression}
-                  className="h-2.5"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900/50">
-                <div className="space-y-1">
-                  <span className="text-xs text-zinc-500">
-                    Tổng mục lắp đặt
-                  </span>
-                  <div className="text-xl font-bold font-mono text-zinc-900 dark:text-zinc-100">
-                    {taskSummary.totalTasks}
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-xs text-zinc-500">
-                    Đã hoàn thành (100%)
-                  </span>
-                  <div className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                    <CheckCircle2 className="h-4 w-4" />
-                    {taskSummary.completedTasks}
-                  </div>
-                </div>
-              </div>
-
-              <Link href={`/projects/${project._id}/plan`} className="block">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full justify-between"
-                >
-                  Mở kế hoạch chi tiết lắp đặt
-                  <ListTodo className="h-4 w-4" />
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* Card 3: Project Members (Relocated here from right column) */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <div>
-                <CardTitle className="text-base">
-                  Danh sách thành viên dự án
-                </CardTitle>
-              </div>
-              {isManager && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setMemberModalOpen(true)}
-                >
-                  Quản lý
-                </Button>
-              )}
-            </CardHeader>
-
-            <CardContent className="space-y-4">
-              {members.length === 0 ? (
-                <div className="py-6 text-center text-xs text-zinc-500">
-                  No supervisors assigned yet.
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {members.map((member) => (
-                    <div
-                      key={member._id}
-                      className="flex items-center justify-between rounded-lg border border-zinc-100 p-3 dark:border-zinc-800"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-100 font-semibold text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                          {member.user?.name
-                            ? member.user.name.charAt(0).toUpperCase()
-                            : "U"}
-                        </div>
-                        <div>
-                          <div className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
-                            {member.user?.name || member.userId}
-                          </div>
-                          {member.user?.email && (
-                            <div className="text-[11px] text-zinc-500">
-                              {member.user.email}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <Badge variant="outline" className="text-[10px]">
-                        {USER_ROLE_VN_LABELS[member.user?.role as UserRoleType]}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
       </div>
 
@@ -483,4 +497,3 @@ export function ProjectOverviewView({
     </div>
   );
 }
-
