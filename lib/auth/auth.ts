@@ -22,7 +22,7 @@ const getBaseURL = () => {
     process.env.VERCEL_ENV === "production" ||
     process.env.NODE_ENV === "production"
   ) {
-    return "http://localhost:3000";
+    return "https://construction-tracker-ddc.vercel.app";
   }
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
@@ -31,7 +31,10 @@ const getBaseURL = () => {
 };
 
 const resolvedBaseURL = getBaseURL();
-const resolvedTrustedOrigins = ["http://localhost:3000"];
+const resolvedTrustedOrigins = [
+  "http://localhost:3000",
+  "https://construction-tracker-ddc.vercel.app",
+];
 
 if (process.env.VERCEL_URL) {
   resolvedTrustedOrigins.push(`https://${process.env.VERCEL_URL}`);
