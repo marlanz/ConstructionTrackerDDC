@@ -44,3 +44,44 @@ export async function setUserRole(
   if (!result) return null;
   return serializeUser(result);
 }
+
+export interface UserSearchResult {
+  id: string;
+  name: string;
+  email: string;
+}
+
+/**
+ * Search users by email or name (case-insensitive partial match).
+ * Requires minimum query length of 2 characters and caps results.
+ */
+export async function searchUsers(
+  query: string,
+  limit: number = 10
+): Promise<UserSearchResult[]> {
+  const trimmed = query.trim();
+  if (trimmed.length < 2) {
+    return [];
+  }
+
+  const usersCol = await getUsersCollection();
+  const escapedQuery = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(escapedQuery, "i");
+
+  const docs = await usersCol
+    .find({
+      $or: [
+        { email: { $regex: regex } },
+        { name: { $regex: regex } },
+      ],
+    })
+    .limit(limit)
+    .toArray();
+
+  return docs.map((doc) => ({
+    id: doc._id.toString(),
+    name: doc.name || "",
+    email: doc.email || "",
+  }));
+}
+

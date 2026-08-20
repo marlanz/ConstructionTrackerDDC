@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { addProjectMember, removeProjectMember } from "@/app/actions/projectMember.actions";
+import { searchUsers, UserSearchResult } from "@/app/actions/user.actions";
 import { ProjectMemberWithUser } from "@/lib/services/projectMember.service";
 import { useRouter } from "next/navigation";
-import { UserPlus, Trash2, UserCheck } from "lucide-react";
+import { UserPlus, Trash2, UserCheck, Search, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { USER_ROLE_VN_LABELS, UserRoleType } from "@/app/constants/role";
 
@@ -31,7 +33,11 @@ export function MemberManagementModal({
   isManager,
 }: MemberManagementModalProps) {
   const router = useRouter();
-  const [newUserId, setNewUserId] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(null);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,14 +45,46 @@ export function MemberManagementModal({
   const [removeTarget, setRemoveTarget] = useState<{ id: string; name: string } | null>(null);
   const [removing, setRemoving] = useState(false);
 
-  const handleAddMember = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newUserId.trim()) return;
+  // Reset search state on modal open/close
+  useEffect(() => {
+    if (!open) {
+      setSearchQuery("");
+      setSearchResults([]);
+      setSelectedUser(null);
+      setError(null);
+    }
+  }, [open]);
+
+  // Debounced search by email or name (minimum 2 chars)
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (trimmed.length < 2) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    const timer = setTimeout(async () => {
+      const res = await searchUsers(trimmed);
+      if (res.success) {
+        setSearchResults(res.data);
+      } else {
+        setSearchResults([]);
+      }
+      setIsSearching(false);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleAddMember = async () => {
+    if (!selectedUser) return;
 
     setLoading(true);
     setError(null);
 
-    const result = await addProjectMember(projectId, newUserId.trim());
+    const result = await addProjectMember(projectId, selectedUser.id);
     if (!result.success) {
       setError(result.error);
       toast.error(result.error);
@@ -54,8 +92,10 @@ export function MemberManagementModal({
       return;
     }
 
-    toast.success("Đã phân công giám sát viên vào dự án thành công");
-    setNewUserId("");
+    toast.success(`Đã phân công ${selectedUser.name || selectedUser.email} vào dự án thành công`);
+    setSelectedUser(null);
+    setSearchQuery("");
+    setSearchResults([]);
     setLoading(false);
     router.refresh();
   };
@@ -99,23 +139,143 @@ export function MemberManagementModal({
           )}
 
           {isManager && (
-            <form onSubmit={handleAddMember} className="rounded-lg border border-zinc-200 bg-zinc-50/50 p-3 dark:border-zinc-800 dark:bg-zinc-900/50 space-y-2">
-              <label className="text-xs font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
-                <UserPlus className="h-3.5 w-3.5" /> Phân công Giám sát viên mới (Nhập ID Người dùng)
+            <div className="rounded-lg border border-zinc-200 bg-zinc-50/50 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/50 space-y-3">
+              <label className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                <UserPlus className="h-3.5 w-3.5 text-primary" /> Phân công Giám sát viên mới
               </label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="VD: 665f10000000000000000001"
-                  value={newUserId}
-                  onChange={(e) => setNewUserId(e.target.value)}
-                  required
-                  className="bg-white dark:bg-zinc-950"
-                />
-                <Button type="submit" size="sm" disabled={loading}>
-                  Phân công
-                </Button>
-              </div>
-            </form>
+
+              {!selectedUser ? (
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-zinc-400" />
+                    <Input
+                      placeholder="Tìm theo email hoặc tên người dùng (tối thiểu 2 ký tự)..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9 bg-white text-xs dark:bg-zinc-950"
+                    />
+                    {isSearching && (
+                      <Loader2 className="absolute right-2.5 top-2.5 h-4 w-4 animate-spin text-zinc-400" />
+                    )}
+                  </div>
+
+                  {/* Loading Skeleton */}
+                  {isSearching && searchResults.length === 0 && (
+                    <div className="rounded-lg border border-zinc-200 bg-white p-2.5 space-y-2 dark:border-zinc-800 dark:bg-zinc-950">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                        <div className="space-y-1.5 flex-1">
+                          <Skeleton className="h-3 w-32" />
+                          <Skeleton className="h-2.5 w-48" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Empty state */}
+                  {!isSearching && searchQuery.trim().length >= 2 && searchResults.length === 0 && (
+                    <div className="rounded-lg border border-dashed border-zinc-200 bg-white p-4 text-center text-xs text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
+                      Không tìm thấy người dùng nào phù hợp với &quot;{searchQuery}&quot;
+                    </div>
+                  )}
+
+                  {/* Search Results list */}
+                  {searchResults.length > 0 && (
+                    <div className="max-h-48 overflow-y-auto rounded-lg border border-zinc-200 bg-white divide-y divide-zinc-100 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:divide-zinc-800">
+                      {searchResults.map((u) => {
+                        const isAlreadyMember = members.some((m) => m.userId === u.id);
+
+                        return (
+                          <div
+                            key={u.id}
+                            className={`flex items-center justify-between p-2.5 text-xs transition-colors ${
+                              isAlreadyMember
+                                ? "opacity-60 bg-zinc-50 dark:bg-zinc-900/40"
+                                : "hover:bg-zinc-50 dark:hover:bg-zinc-900/50 cursor-pointer"
+                            }`}
+                            onClick={() => {
+                              if (!isAlreadyMember) {
+                                setSelectedUser(u);
+                                setSearchQuery("");
+                                setSearchResults([]);
+                              }
+                            }}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-100 font-semibold text-[11px] text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                                {u.name ? u.name.charAt(0).toUpperCase() : "U"}
+                              </div>
+                              <div>
+                                <div className="font-medium text-zinc-900 dark:text-zinc-100">
+                                  {u.name || "Chưa đặt tên"}
+                                </div>
+                                <div className="text-zinc-500 dark:text-zinc-400 text-[11px]">
+                                  {u.email}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div>
+                              {isAlreadyMember ? (
+                                <Badge variant="secondary" className="text-[10px]">
+                                  Đã phân công
+                                </Badge>
+                              ) : (
+                                <Button size="sm" variant="ghost" className="h-7 text-xs text-primary hover:text-primary">
+                                  Chọn
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="rounded-lg border border-primary/20 bg-white p-3 space-y-3 dark:border-primary/30 dark:bg-zinc-950">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 font-bold text-xs text-primary">
+                        {selectedUser.name ? selectedUser.name.charAt(0).toUpperCase() : "U"}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-xs text-zinc-900 dark:text-zinc-100">
+                          {selectedUser.name || "Chưa đặt tên"}
+                        </div>
+                        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                          {selectedUser.email}
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedUser(null)}
+                      disabled={loading}
+                      className="h-7 px-2 text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
+                    >
+                      <X className="h-3.5 w-3.5 mr-1" /> Đổi người khác
+                    </Button>
+                  </div>
+
+                  <div className="flex justify-end pt-1">
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={loading}
+                      onClick={handleAddMember}
+                      className="gap-1.5 text-xs"
+                    >
+                      <UserPlus className="h-3.5 w-3.5" />
+                      {loading ? "Đang phân công..." : "Xác nhận phân công"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           <div className="space-y-2">
