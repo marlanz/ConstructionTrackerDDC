@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { MemberManagementModal } from "@/components/MemberManagementModal";
+import { DeleteProjectDialog } from "@/components/DeleteProjectDialog";
 import {
   ArrowLeft,
   ArrowRight,
@@ -31,6 +32,7 @@ import {
   FileText,
   ListTodo,
   MapPin,
+  Trash2,
   UserCheck,
   UserPlus,
 } from "lucide-react";
@@ -72,7 +74,9 @@ function CompactLatestReportCard({
               <ClipboardList className="h-4 w-4" />
             </div>
             <div>
-              <CardTitle className="text-base">Báo cáo mới nhất</CardTitle>
+              <CardTitle className="text-base text-brand">
+                Báo cáo mới nhất
+              </CardTitle>
             </div>
           </div>
         </CardHeader>
@@ -210,6 +214,7 @@ export function ProjectOverviewView({
   latestReport,
 }: ProjectOverviewViewProps) {
   const [memberModalOpen, setMemberModalOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { project, members, taskSummary } = overview;
   const isManager = user.role === "MANAGER";
   const statusStyle = getProjectStatusStyle(project.status);
@@ -236,7 +241,9 @@ export function ProjectOverviewView({
             >
               {project.projectCode}
             </Badge>
-            <Badge className={statusStyle.badgeClass}>{statusStyle.label}</Badge>
+            <Badge className={statusStyle.badgeClass}>
+              {statusStyle.label}
+            </Badge>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-3xl">
             {project.name}
@@ -244,13 +251,22 @@ export function ProjectOverviewView({
         </div>
 
         {isManager && (
-          <Button
-            onClick={() => setMemberModalOpen(true)}
-            variant="outline"
-            className="gap-2"
-          >
-            <UserPlus className="h-4 w-4" /> Quản lý thành viên giám sát
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              onClick={() => setMemberModalOpen(true)}
+              variant="outline"
+              className="gap-2"
+            >
+              <UserPlus className="h-4 w-4" /> Quản lý thành viên giám sát
+            </Button>
+            <Button
+              onClick={() => setDeleteDialogOpen(true)}
+              variant="destructive"
+              className="gap-2"
+            >
+              <Trash2 className="h-4 w-4" /> Xóa dự án
+            </Button>
+          </div>
         )}
       </div>
 
@@ -331,7 +347,9 @@ export function ProjectOverviewView({
                       </div>
 
                       <Badge variant="outline" className="text-[10px]">
-                        {USER_ROLE_VN_LABELS[member.user?.role as UserRoleType] || member.user?.role}
+                        {USER_ROLE_VN_LABELS[
+                          member.user?.role as UserRoleType
+                        ] || member.user?.role}
                       </Badge>
                     </div>
                   ))}
@@ -345,13 +363,15 @@ export function ProjectOverviewView({
         <div className="order-2 lg:order-1 lg:col-span-2 space-y-6">
           {/* Card 2: Task Progress Summary */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <div>
-                <CardTitle className="text-base">Quá trình lắp đặt</CardTitle>
-                <CardDescription>Tiến độ lắp đặt tổng quan</CardDescription>
-              </div>
+            <CardHeader className="flex flex-row items-center gap-3 space-y-0">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <ListTodo className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle className="text-base font-semibold text-brand">
+                  Quá trình lắp đặt công trình tổng quan
+                </CardTitle>
+                <CardDescription>Tiến độ % lắp đặt</CardDescription>
               </div>
             </CardHeader>
 
@@ -359,7 +379,7 @@ export function ProjectOverviewView({
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium text-zinc-700 dark:text-zinc-300">
-                    Tiến độ dự án
+                    Tiến độ hoàn thành dự án
                   </span>
                   <span className="font-bold text-zinc-900 dark:text-zinc-50 font-mono">
                     {taskSummary.avgProgression}%
@@ -373,7 +393,7 @@ export function ProjectOverviewView({
 
               <div className="grid grid-cols-2 gap-4 rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900/50">
                 <div className="space-y-1">
-                  <span className="text-xs text-zinc-500">
+                  <span className="text-sm text-zinc-500">
                     Tổng mục lắp đặt
                   </span>
                   <div className="text-xl font-bold font-mono text-zinc-900 dark:text-zinc-100">
@@ -382,7 +402,7 @@ export function ProjectOverviewView({
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-xs text-zinc-500">
+                  <span className="text-sm text-zinc-500">
                     Đã hoàn thành (100%)
                   </span>
                   <div className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
@@ -395,10 +415,9 @@ export function ProjectOverviewView({
               <Link href={`/projects/${project._id}/plan`} className="block">
                 <Button
                   variant="outline"
-                  size="sm"
-                  className="w-full justify-between"
+                  className="w-full justify-between text-sm font-medium border-brand text-brand hover:text-brand hover:bg-white"
                 >
-                  Mở kế hoạch chi tiết lắp đặt
+                  Đi đến kế hoạch chi tiết lắp đặt
                   <ListTodo className="h-4 w-4" />
                 </Button>
               </Link>
@@ -407,7 +426,9 @@ export function ProjectOverviewView({
           {/* Card 1: Project Details */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Chi tiết dự án</CardTitle>
+              <CardTitle className="text-base text-brand">
+                Chi tiết dự án
+              </CardTitle>
             </CardHeader>
 
             <CardContent className="space-y-6 text-sm">
@@ -491,6 +512,17 @@ export function ProjectOverviewView({
         members={members}
         isManager={isManager}
       />
+
+      {/* Delete Project Confirmation Dialog */}
+      {isManager && (
+        <DeleteProjectDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          projectId={project._id}
+          projectCode={project.projectCode}
+          projectName={project.name}
+        />
+      )}
     </div>
   );
 }
