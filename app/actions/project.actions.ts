@@ -10,6 +10,8 @@ import {
 import {
   canAccessProject,
   createProject as createProjectService,
+  deleteProject as deleteProjectService,
+  getProjectById,
   getProjectOverview as getProjectOverviewService,
   listProjectsForUser,
   ProjectOverview,
@@ -101,6 +103,49 @@ export async function updateProject(
     console.error("Error updating project:", error);
     return fail(
       "Đã xảy ra lỗi khi cập nhật dự án",
+      ERROR_CODES.INTERNAL_ERROR,
+    );
+  }
+}
+
+/**
+ * Hard delete a project and all associated resources (MANAGER only).
+ * Requires exact confirmation of projectCode.
+ */
+export async function deleteProject(
+  projectId: string,
+  confirmationCode: string,
+): Promise<Result<{ deleted: true }>> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
+    }
+
+    if (user.role !== "MANAGER") {
+      return fail(
+        "Chỉ có quản lý mới có quyền xóa dự án",
+        ERROR_CODES.FORBIDDEN,
+      );
+    }
+
+    const project = await getProjectById(projectId);
+    if (!project) {
+      return fail("Không tìm thấy dự án", ERROR_CODES.NOT_FOUND);
+    }
+
+    // Confirmation check (server-side, not just UI):
+    // Compare confirmationCode against projectCode
+    if (confirmationCode !== project.projectCode) {
+      return fail("Mã dự án không khớp", ERROR_CODES.VALIDATION_ERROR);
+    }
+
+    await deleteProjectService(projectId);
+    return ok({ deleted: true });
+  } catch (error: any) {
+    console.error("Error deleting project:", error);
+    return fail(
+      "Đã xảy ra lỗi khi xóa dự án",
       ERROR_CODES.INTERNAL_ERROR,
     );
   }

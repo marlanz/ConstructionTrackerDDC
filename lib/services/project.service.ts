@@ -1,7 +1,14 @@
-import { getProjectMembersCollection, getProjectsCollection, ProjectDoc } from "@/lib/db/collections";
+import {
+  getDailyReportsCollection,
+  getInstallationDetailCollection,
+  getProjectMembersCollection,
+  getProjectsCollection,
+  ProjectDoc,
+} from "@/lib/db/collections";
 import { CreateProjectInput, UpdateProjectInput } from "@/lib/schemas/project.schema";
 import { hasMembership, listMembersByProject, ProjectMemberWithUser } from "@/lib/services/projectMember.service";
 import { getTaskSummaryForProject } from "@/lib/services/installationDetail.service";
+import { deleteCloudinaryImages } from "@/lib/cloudinary";
 import { ObjectId } from "mongodb";
 
 function toObjectId(id: string): ObjectId {
@@ -190,4 +197,58 @@ export async function getProjectOverview(projectId: string): Promise<ProjectOver
     members,
     taskSummary,
   };
+}
+
+/**
+ * Hard delete a project and cascade deletion to all related records:
+ * 1. Collect and delete all associated Cloudinary images (daily reports + briefPlan)
+ * 2. Delete all daily_reports for projectId
+ * 3. Delete all installation_detail rows for projectId
+ * 4. Delete all project_members rows for projectId
+ * 5. Delete the projects document last
+ */
+export async function deleteProject(projectId: string): Promise<boolean> {
+  const projObjId = toObjectId(projectId);
+  const projectsCol = await getProjectsCollection();
+
+  const project = await projectsCol.findOne({ _id: projObjId });
+  if (!project) {
+    throw new Error("PROJECT_NOT_FOUND");
+  }
+
+  // 1. Collect and delete all Cloudinary media assets
+  const dailyReportsCol = await getDailyReportsCollection();
+  const reports = await dailyReportsCol.find({ projectId: projObjId }).toArray();
+
+  const cloudinaryUrls: string[] = [];
+  if (project.briefPlan) {
+    cloudinaryUrls.push(project.briefPlan);
+  }
+  for (const report of reports) {
+    if (report.workAgenda && Array.isArray(report.workAgenda)) {
+      for (const entry of report.workAgenda) {
+        if (entry.imgUrl && Array.isArray(entry.imgUrl)) {
+          cloudinaryUrls.push(...entry.imgUrl);
+        }
+      }
+    }
+  }
+
+  if (cloudinaryUrls.length > 0) {
+    await deleteCloudinaryImages(cloudinaryUrls);
+  }
+
+  // 2. Cascade delete child collections first
+  await dailyReportsCol.deleteMany({ projectId: projObjId });
+
+  const installationCol = await getInstallationDetailCollection();
+  await installationCol.deleteMany({ projectId: projObjId });
+
+  const membersCol = await getProjectMembersCollection();
+  await membersCol.deleteMany({ projectId: projObjId });
+
+  // 3. Delete the project document last
+  const result = await projectsCol.deleteOne({ _id: projObjId });
+
+  return result.deletedCount > 0;
 }
