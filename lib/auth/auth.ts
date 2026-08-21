@@ -1,14 +1,11 @@
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
-import { MongoClient } from "mongodb";
 import { headers } from "next/headers";
+import { cache } from "react";
+import clientPromise from "@/lib/db/mongodb";
 
-if (!process.env.MONGODB_URI) {
-  throw new Error("MONGODB_URI environment variable is missing.");
-}
-
-const client = new MongoClient(process.env.MONGODB_URI);
+const client = await clientPromise;
 const db = client.db();
 
 const getBaseURL = () => {
@@ -76,10 +73,11 @@ export const auth = betterAuth({
 
 /**
  * Server-side helper to get the currently authenticated user with role.
+ * Deduplicated per-request via React cache().
  */
-export async function getCurrentUser() {
+export const getCurrentUser = cache(async () => {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
   return session?.user ?? null;
-}
+});

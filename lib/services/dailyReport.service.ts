@@ -1,5 +1,6 @@
 import { DailyReportDoc, getDailyReportsCollection, getProjectsCollection, WorkAgendaEntryDoc } from "@/lib/db/collections";
 import { CreateDailyReportInput, UpdateDailyReportInput, WorkAgendaEntryInput } from "@/lib/schemas/dailyReport.schema";
+import { getUserById } from "@/lib/services/user.service";
 import { ObjectId } from "mongodb";
 import {
   unstable_cacheLife as cacheLife,
@@ -281,4 +282,38 @@ export async function getConstructionDayNumber(
 
   // Day 1 on start date
   return Math.max(1, diffDays + 1);
+}
+
+export type LatestReportPayload = {
+  report: SerializedDailyReport;
+  dayNumber: number;
+  createdByName: string;
+} | null;
+
+/**
+ * Fetch and assemble the latest daily report payload (with day number & author name)
+ * for project overview. Cached with "use cache".
+ */
+export async function getLatestDailyReportPayload(
+  projectId: string
+): Promise<LatestReportPayload> {
+  "use cache";
+  cacheTag(`project:${projectId}:reports`);
+  cacheLife("minutes");
+
+  const report = await getLatestDailyReport(projectId);
+  if (!report) {
+    return null;
+  }
+
+  const [dayNumber, author] = await Promise.all([
+    getConstructionDayNumber(projectId, new Date(report.date)),
+    getUserById(report.createdBy),
+  ]);
+
+  return {
+    report,
+    dayNumber,
+    createdByName: author?.name ?? report.createdBy,
+  };
 }

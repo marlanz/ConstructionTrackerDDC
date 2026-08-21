@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ProjectOverview } from "@/lib/services/project.service";
-import { LatestReportPayload } from "@/app/actions/dailyReport.actions";
+import { LatestReportPayload } from "@/lib/services/dailyReport.service";
 import { getProjectStatusStyle } from "@/lib/status-styles";
 import { formatDate } from "@/lib/i18n/formatters";
 import {
@@ -36,7 +36,6 @@ import {
   MapPin,
   Trash2,
   UserCheck,
-  UserPlus,
 } from "lucide-react";
 import { USER_ROLE_VN_LABELS, UserRoleType } from "@/constants/role";
 
