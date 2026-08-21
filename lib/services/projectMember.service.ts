@@ -5,6 +5,10 @@ import {
   ProjectMemberDoc,
 } from "@/lib/db/collections";
 import { ObjectId } from "mongodb";
+import {
+  unstable_cacheLife as cacheLife,
+  unstable_cacheTag as cacheTag,
+} from "next/cache";
 
 function toObjectId(id: string): ObjectId {
   if (!ObjectId.isValid(id)) {
@@ -95,6 +99,9 @@ export async function removeProjectMember(memberId: string): Promise<boolean> {
 export async function listMembersByProject(
   projectId: string,
 ): Promise<ProjectMemberWithUser[]> {
+  "use cache";
+  cacheTag(`project:${projectId}`);
+  cacheLife("minutes");
   const membersCol = await getProjectMembersCollection();
   const usersCol = await getUsersCollection();
 

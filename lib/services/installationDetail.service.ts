@@ -1,6 +1,10 @@
 import { getInstallationDetailCollection, InstallationDetailDoc } from "@/lib/db/collections";
 import { CreateInstallationTaskInput, UpdateInstallationTaskInput } from "@/lib/schemas/installationDetail.schema";
 import { ObjectId } from "mongodb";
+import {
+  unstable_cacheLife as cacheLife,
+  unstable_cacheTag as cacheTag,
+} from "next/cache";
 
 function toObjectId(id: string): ObjectId {
   if (!ObjectId.isValid(id)) {
@@ -191,6 +195,9 @@ export async function reorderInstallationTasks(
 export async function listInstallationTasks(
   projectId: string
 ): Promise<SerializedInstallationTask[]> {
+  "use cache";
+  cacheTag(`project:${projectId}`);
+  cacheLife("minutes");
   const col = await getInstallationDetailCollection();
   const docs = await col
     .find({ projectId: toObjectId(projectId) })
@@ -204,6 +211,9 @@ export async function getTaskSummaryForProject(projectId: string): Promise<{
   completedTasks: number;
   avgProgression: number;
 }> {
+  "use cache";
+  cacheTag(`project:${projectId}`);
+  cacheLife("minutes");
   const col = await getInstallationDetailCollection();
   const tasks = await col
     .find({ projectId: toObjectId(projectId) })

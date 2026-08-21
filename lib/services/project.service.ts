@@ -10,6 +10,10 @@ import { hasMembership, listMembersByProject, ProjectMemberWithUser } from "@/li
 import { getTaskSummaryForProject } from "@/lib/services/installationDetail.service";
 import { deleteCloudinaryImages } from "@/lib/cloudinary";
 import { ObjectId } from "mongodb";
+import {
+  unstable_cacheLife as cacheLife,
+  unstable_cacheTag as cacheTag,
+} from "next/cache";
 
 function toObjectId(id: string): ObjectId {
   if (!ObjectId.isValid(id)) {
@@ -55,6 +59,9 @@ export async function canAccessProject(
 }
 
 export async function getProjectById(projectId: string): Promise<SerializedProject | null> {
+  "use cache";
+  cacheTag(`project:${projectId}`);
+  cacheLife("minutes");
   if (!ObjectId.isValid(projectId)) return null;
   const col = await getProjectsCollection();
   const doc = await col.findOne({ _id: toObjectId(projectId) });
@@ -148,6 +155,9 @@ export async function listProjectsForUser(user: {
   id: string;
   role: string;
 }): Promise<SerializedProject[]> {
+  "use cache";
+  cacheTag("projects");
+  cacheLife("minutes");
   const projectsCol = await getProjectsCollection();
 
   if (user.role === "MANAGER") {
@@ -186,6 +196,9 @@ export interface ProjectOverview {
 }
 
 export async function getProjectOverview(projectId: string): Promise<ProjectOverview | null> {
+  "use cache";
+  cacheTag(`project:${projectId}`);
+  cacheLife("minutes");
   const project = await getProjectById(projectId);
   if (!project) return null;
 

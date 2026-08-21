@@ -20,6 +20,7 @@ import {
 } from "@/lib/services/installationDetail.service";
 import { canAccessProject } from "@/lib/services/project.service";
 import { hasMembership } from "@/lib/services/projectMember.service";
+import { revalidateTag } from "next/cache";
 
 /**
  * Helper to enforce SUPERVISOR-only write access per DATA_MODEL_SPEC.md §3.3:
@@ -60,6 +61,7 @@ export async function createInstallationTask(
     }
 
     const task = await createInstallationTaskService(projectId, parsed.data);
+    revalidateTag(`project:${projectId}`, "max");
     return ok(task);
   } catch (error: any) {
     console.error("Error creating installation task:", error);
@@ -99,6 +101,7 @@ export async function updateInstallationTask(
     }
 
     const updated = await updateInstallationTaskService(taskId, parsed.data);
+    revalidateTag(`project:${existingTask.projectId}`, "max");
     return ok(updated);
   } catch (error: any) {
     if (error.message === "TASK_NOT_FOUND") {
@@ -141,6 +144,7 @@ export async function updateTaskProgress(
     }
 
     const updated = await updateTaskProgressService(taskId, parsed.data.progression);
+    revalidateTag(`project:${existingTask.projectId}`, "max");
     return ok(updated);
   } catch (error: any) {
     if (error.message === "TASK_NOT_FOUND") {
@@ -178,6 +182,7 @@ export async function reorderInstallationTasks(
     }
 
     await reorderInstallationTasksService(projectId, parsed.data.orderedTaskIds);
+    revalidateTag(`project:${projectId}`, "max");
     return ok({ reordered: true });
   } catch (error: any) {
     console.error("Error reordering installation tasks:", error);

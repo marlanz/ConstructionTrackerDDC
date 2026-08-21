@@ -1,13 +1,15 @@
+import { Suspense } from "react";
 import { getCurrentUser } from "@/lib/auth/auth";
 import {
   getProjectById,
   canAccessProject,
 } from "@/lib/services/project.service";
-import { listDailyReports } from "@/app/actions/dailyReport.actions";
-import { listInstallationTasks } from "@/app/actions/installationDetail.actions";
+import { listDailyReports } from "@/lib/services/dailyReport.service";
+import { listInstallationTasks } from "@/lib/services/installationDetail.service";
 import { hasMembership } from "@/lib/services/projectMember.service";
 import { redirect, notFound } from "next/navigation";
 import { DailyReportsView } from "./DailyReportsView";
+import { DailyReportsSkeleton } from "@/components/skeletons/DailyReportsSkeleton";
 
 interface DailyReportsPageProps {
   params: Promise<{
@@ -15,18 +17,13 @@ interface DailyReportsPageProps {
   }>;
 }
 
-export default async function DailyReportsPage({
+async function DailyReportsContent({
   params,
 }: DailyReportsPageProps) {
   const { id } = await params;
   const user = await getCurrentUser();
   if (!user) {
     redirect("/login");
-  }
-
-  const project = await getProjectById(id);
-  if (!project) {
-    notFound();
   }
 
   const hasAccess = await canAccessProject(
@@ -37,30 +34,43 @@ export default async function DailyReportsPage({
     redirect("/projects");
   }
 
-  const reportsResult = await listDailyReports(id);
-  const reports = reportsResult.success ? reportsResult.data : [];
+  const [project, reports, tasks, isSupervisor] = await Promise.all([
+    getProjectById(id),
+    listDailyReports(id),
+    listInstallationTasks(id),
+    hasMembership(user.id, id),
+  ]);
 
-  const tasksResult = await listInstallationTasks(id);
-  const tasks = tasksResult.success ? tasksResult.data : [];
+  if (!project) {
+    notFound();
+  }
 
-  const isSupervisor = await hasMembership(user.id, id);
+  return (
+    <DailyReportsView
+      user={{
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      }}
+      project={project}
+      reports={reports}
+      tasks={tasks}
+      isSupervisor={isSupervisor}
+    />
+  );
+}
 
+export default function DailyReportsPage(props: DailyReportsPageProps) {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <DailyReportsView
-          user={{
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-          }}
-          project={project}
-          reports={reports}
-          tasks={tasks}
-          isSupervisor={isSupervisor}
-        />
+        <Suspense fallback={<DailyReportsSkeleton />}>
+          <DailyReportsContent {...props} />
+        </Suspense>
       </main>
     </div>
   );
 }
+
+

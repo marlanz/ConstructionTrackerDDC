@@ -26,6 +26,7 @@ import {
 import { canAccessProject } from "@/lib/services/project.service";
 import { hasMembership } from "@/lib/services/projectMember.service";
 import { getUserById } from "@/lib/services/user.service";
+import { revalidateTag } from "next/cache";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -93,6 +94,7 @@ export async function createDailyReport(
       user.id,
       parsed.data,
     );
+    revalidateTag(`project:${projectId}:reports`, "max");
     return ok(report);
   } catch (error: any) {
     console.error("Error creating daily report:", error);
@@ -141,6 +143,7 @@ export async function addWorkAgendaEntry(
     }
 
     const entry = await addWorkAgendaEntryService(reportId, parsed.data);
+    revalidateTag(`project:${report.projectId}:reports`, "max");
     return ok(entry);
   } catch (error: any) {
     if (error.message === "REPORT_NOT_FOUND") {
@@ -255,6 +258,7 @@ export async function attachReportImage(
       url: image.url,
       publicId: image.publicId || "",
     });
+    revalidateTag(`project:${report.projectId}:reports`, "max");
 
     return ok({
       url: image.url,
@@ -314,6 +318,7 @@ export async function updateDailyReport(
     }
 
     const updated = await updateDailyReportService(reportId, parsed.data);
+    revalidateTag(`project:${report.projectId}:reports`, "max");
     return ok(updated);
   } catch (error: any) {
     if (error.message === "REPORT_NOT_FOUND") {
@@ -359,6 +364,7 @@ export async function deleteDailyReport(
     }
 
     const success = await deleteDailyReportService(reportId);
+    revalidateTag(`project:${report.projectId}:reports`, "max");
     return ok({ deleted: success });
   } catch (error: any) {
     console.error("Error deleting daily report:", error);
