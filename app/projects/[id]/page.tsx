@@ -4,7 +4,7 @@ import {
   canAccessProject,
   getProjectOverview,
 } from "@/lib/services/project.service";
-import { getLatestDailyReport } from "@/app/actions/dailyReport.actions";
+import { getLatestDailyReportPayload } from "@/lib/services/dailyReport.service";
 import { redirect, notFound } from "next/navigation";
 import { ProjectOverviewView } from "./ProjectOverviewView";
 import { ProjectOverviewSkeleton } from "@/components/skeletons/ProjectOverviewSkeleton";
@@ -32,9 +32,9 @@ async function ProjectDetailContent({
     redirect("/projects");
   }
 
-  const [overview, latestReportResult] = await Promise.all([
+  const [overview, latestReport] = await Promise.all([
     getProjectOverview(id),
-    getLatestDailyReport(id),
+    getLatestDailyReportPayload(id),
   ]);
 
   if (!overview) {
@@ -50,7 +50,7 @@ async function ProjectDetailContent({
         role: user.role,
       }}
       overview={overview}
-      latestReport={latestReportResult.success ? latestReportResult.data : null}
+      latestReport={latestReport}
     />
   );
 }

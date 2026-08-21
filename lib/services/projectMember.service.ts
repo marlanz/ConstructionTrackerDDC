@@ -10,6 +10,8 @@ import {
   unstable_cacheTag as cacheTag,
 } from "next/cache";
 
+import { cache } from "react";
+
 function toObjectId(id: string): ObjectId {
   if (!ObjectId.isValid(id)) {
     throw new Error(`Invalid ObjectId format: ${id}`);
@@ -45,10 +47,14 @@ function serializeProjectMember(
   };
 }
 
-export async function hasMembership(
+/**
+ * Check if a user is a member of a project.
+ * Deduplicated per-request via React cache().
+ */
+export const hasMembership = cache(async (
   userId: string,
   projectId: string,
-): Promise<boolean> {
+): Promise<boolean> => {
   if (!ObjectId.isValid(userId) || !ObjectId.isValid(projectId)) {
     return false;
   }
@@ -58,7 +64,7 @@ export async function hasMembership(
     userId: toObjectId(userId),
   });
   return count > 0;
-}
+});
 
 export async function addProjectMember(
   projectId: string,

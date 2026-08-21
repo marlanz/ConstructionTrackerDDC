@@ -5,7 +5,6 @@ import { v2 as cloudinary } from "cloudinary";
 import { ERROR_CODES } from "@/lib/errors";
 import { fail, ok, Result } from "@/lib/result";
 import {
-  addWorkAgendaEntrySchema,
   createDailyReportSchema,
   updateDailyReportSchema,
   workAgendaEntrySchema,
@@ -17,7 +16,8 @@ import {
   deleteDailyReport as deleteDailyReportService,
   getConstructionDayNumber as getConstructionDayNumberService,
   getDailyReportById,
-  getLatestDailyReport as getLatestDailyReportService,
+  getLatestDailyReportPayload as getLatestDailyReportPayloadService,
+  LatestReportPayload,
   listDailyReports as listDailyReportsService,
   SerializedDailyReport,
   SerializedWorkAgendaEntry,
@@ -25,7 +25,6 @@ import {
 } from "@/lib/services/dailyReport.service";
 import { canAccessProject } from "@/lib/services/project.service";
 import { hasMembership } from "@/lib/services/projectMember.service";
-import { getUserById } from "@/lib/services/user.service";
 import { revalidatePath, revalidateTag, updateTag } from "next/cache";
 
 cloudinary.config({
@@ -35,15 +34,7 @@ cloudinary.config({
   secure: true,
 });
 
-/**
- * Payload returned by getLatestDailyReport.
- * null when the project has no reports yet.
- */
-export type LatestReportPayload = {
-  report: SerializedDailyReport;
-  dayNumber: number;
-  createdByName: string;
-} | null;
+export type { LatestReportPayload };
 
 /**
  * Helper to enforce SUPERVISOR-only write access per DATA_MODEL_SPEC.md §3.3 & §3.5:
@@ -510,23 +501,8 @@ export async function getLatestDailyReport(
       );
     }
 
-    const report = await getLatestDailyReportService(projectId);
-    if (!report) {
-      return ok(null);
-    }
-
-    // Resolve day number and author name server-side so the client
-    // receives only plain serializable data.
-    const [dayNumber, author] = await Promise.all([
-      getConstructionDayNumberService(projectId, new Date(report.date)),
-      getUserById(report.createdBy),
-    ]);
-
-    return ok({
-      report,
-      dayNumber,
-      createdByName: author?.name ?? report.createdBy,
-    });
+    const payload = await getLatestDailyReportPayloadService(projectId);
+    return ok(payload);
   } catch (error: any) {
     console.error("Error fetching latest daily report:", error);
     return fail(
