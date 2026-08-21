@@ -9,6 +9,9 @@ import {
   removeProjectMember as removeProjectMemberService,
   SerializedProjectMember,
 } from "@/lib/services/projectMember.service";
+import { getProjectMembersCollection } from "@/lib/db/collections";
+import { revalidateTag } from "next/cache";
+import { ObjectId } from "mongodb";
 
 /**
  * Add a supervisor to a project (MANAGER only).
@@ -33,6 +36,7 @@ export async function addProjectMember(
     }
 
     const member = await addProjectMemberService(parsed.data.projectId, parsed.data.userId);
+    revalidateTag(`project:${projectId}`, "max");
     return ok(member);
   } catch (error: any) {
     if (error.message === "MEMBER_EXISTS") {
@@ -45,6 +49,7 @@ export async function addProjectMember(
 
 /**
  * Remove a supervisor from a project (MANAGER only). Hard delete.
+ * Looks up the member's projectId before deletion so we can revalidate the right tag.
  */
 export async function removeProjectMember(memberId: string): Promise<Result<{ removed: boolean }>> {
   try {
@@ -62,9 +67,19 @@ export async function removeProjectMember(memberId: string): Promise<Result<{ re
       return fail(parsed.error.issues[0]?.message || "Dữ liệu nhập không hợp lệ", ERROR_CODES.VALIDATION_ERROR);
     }
 
+    // Fetch member before deletion to know which project tag to revalidate
+    const col = await getProjectMembersCollection();
+    const memberDoc = ObjectId.isValid(parsed.data.memberId)
+      ? await col.findOne({ _id: new ObjectId(parsed.data.memberId) })
+      : null;
+
     const success = await removeProjectMemberService(parsed.data.memberId);
     if (!success) {
       return fail("Không tìm thấy phân công thành viên dự án", ERROR_CODES.NOT_FOUND);
+    }
+
+    if (memberDoc) {
+      revalidateTag(`project:${memberDoc.projectId.toString()}`, "max");
     }
 
     return ok({ removed: true });

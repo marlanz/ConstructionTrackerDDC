@@ -1,8 +1,13 @@
+import { Suspense } from "react";
 import { getCurrentUser } from "@/lib/auth/auth";
-import { getProjectOverview } from "@/app/actions/project.actions";
+import {
+  canAccessProject,
+  getProjectOverview,
+} from "@/lib/services/project.service";
 import { getLatestDailyReport } from "@/app/actions/dailyReport.actions";
 import { redirect, notFound } from "next/navigation";
 import { ProjectOverviewView } from "./ProjectOverviewView";
+import { ProjectOverviewSkeleton } from "@/components/skeletons/ProjectOverviewSkeleton";
 
 interface ProjectDetailPageProps {
   params: Promise<{
@@ -10,7 +15,7 @@ interface ProjectDetailPageProps {
   }>;
 }
 
-export default async function ProjectDetailPage({
+async function ProjectDetailContent({
   params,
 }: ProjectDetailPageProps) {
   const { id } = await params;
@@ -19,34 +24,47 @@ export default async function ProjectDetailPage({
     redirect("/login");
   }
 
-  const [overviewResult, latestReportResult] = await Promise.all([
+  const hasAccess = await canAccessProject(
+    { id: user.id, role: user.role },
+    id,
+  );
+  if (!hasAccess) {
+    redirect("/projects");
+  }
+
+  const [overview, latestReportResult] = await Promise.all([
     getProjectOverview(id),
     getLatestDailyReport(id),
   ]);
 
-  if (!overviewResult.success) {
-    if (overviewResult.code === "FORBIDDEN") {
-      redirect("/projects");
-    }
+  if (!overview) {
     notFound();
   }
 
   return (
+    <ProjectOverviewView
+      user={{
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      }}
+      overview={overview}
+      latestReport={latestReportResult.success ? latestReportResult.data : null}
+    />
+  );
+}
+
+export default function ProjectDetailPage(props: ProjectDetailPageProps) {
+  return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <ProjectOverviewView
-          user={{
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-          }}
-          overview={overviewResult.data}
-          latestReport={
-            latestReportResult.success ? latestReportResult.data : null
-          }
-        />
+        <Suspense fallback={<ProjectOverviewSkeleton />}>
+          <ProjectDetailContent {...props} />
+        </Suspense>
       </main>
     </div>
   );
 }
+
+

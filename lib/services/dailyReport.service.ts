@@ -1,6 +1,10 @@
 import { DailyReportDoc, getDailyReportsCollection, getProjectsCollection, WorkAgendaEntryDoc } from "@/lib/db/collections";
 import { CreateDailyReportInput, UpdateDailyReportInput, WorkAgendaEntryInput } from "@/lib/schemas/dailyReport.schema";
 import { ObjectId } from "mongodb";
+import {
+  unstable_cacheLife as cacheLife,
+  unstable_cacheTag as cacheTag,
+} from "next/cache";
 
 function toObjectId(id: string): ObjectId {
   if (!ObjectId.isValid(id)) {
@@ -225,6 +229,9 @@ export async function listDailyReports(
   projectId: string,
   filter?: { from?: Date; to?: Date }
 ): Promise<SerializedDailyReport[]> {
+  "use cache";
+  cacheTag(`project:${projectId}:reports`);
+  cacheLife("minutes");
   const col = await getDailyReportsCollection();
   const query: any = { projectId: toObjectId(projectId) };
 
@@ -245,6 +252,9 @@ export async function listDailyReports(
 export async function getLatestDailyReport(
   projectId: string
 ): Promise<SerializedDailyReport | null> {
+  "use cache";
+  cacheTag(`project:${projectId}:reports`);
+  cacheLife("minutes");
   const col = await getDailyReportsCollection();
   const doc = await col
     .find({ projectId: toObjectId(projectId) })
