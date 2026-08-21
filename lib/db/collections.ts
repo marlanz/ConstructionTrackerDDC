@@ -1,6 +1,6 @@
 import { Collection, Db, ObjectId } from "mongodb";
 import clientPromise from "./mongodb";
-import { UserRoleType } from "@/app/constants/role";
+import { UserRoleType } from "@/constants/role";
 
 let dbInstance: Db | null = null;
 
@@ -42,7 +42,13 @@ export interface ProjectDoc {
   startDate: Date;
   plannedEndDate: Date;
   actualEndDate: Date | null;
-  status: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "ON_HOLD" | "CANCELLED";
+  status:
+    | "PLANNED"
+    | "IN_PROGRESS"
+    | "COMPLETED"
+    | "ON_HOLD"
+    | "CANCELLED"
+    | "LATE";
   createdAt: Date;
   updatedAt: Date;
 }

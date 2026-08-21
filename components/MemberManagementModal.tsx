@@ -1,19 +1,29 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { addProjectMember, removeProjectMember } from "@/app/actions/projectMember.actions";
+import {
+  addProjectMember,
+  removeProjectMember,
+} from "@/app/actions/projectMember.actions";
 import { searchUsers, UserSearchResult } from "@/app/actions/user.actions";
 import { ProjectMemberWithUser } from "@/lib/services/projectMember.service";
 import { useRouter } from "next/navigation";
 import { UserPlus, Trash2, UserCheck, Search, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
-import { USER_ROLE_VN_LABELS, UserRoleType } from "@/app/constants/role";
+import { USER_ROLE_VN_LABELS, UserRoleType } from "@/constants/role";
 
 interface MemberManagementModalProps {
   open: boolean;
@@ -36,13 +46,18 @@ export function MemberManagementModal({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(
+    null,
+  );
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // AlertDialog state for removing supervisor
-  const [removeTarget, setRemoveTarget] = useState<{ id: string; name: string } | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [removing, setRemoving] = useState(false);
 
   // Reset search state on modal open/close
@@ -92,7 +107,9 @@ export function MemberManagementModal({
       return;
     }
 
-    toast.success(`Đã phân công ${selectedUser.name || selectedUser.email} vào dự án thành công`);
+    toast.success(
+      `Đã phân công ${selectedUser.name || selectedUser.email} vào dự án thành công`,
+    );
     setSelectedUser(null);
     setSearchQuery("");
     setSearchResults([]);
@@ -127,7 +144,10 @@ export function MemberManagementModal({
             Quản lý thành viên dự án
           </DialogTitle>
           <DialogDescription>
-            Các giám sát viên được phân công cho <span className="font-semibold text-zinc-900 dark:text-zinc-100">{projectName}</span>
+            Các giám sát viên được phân công cho{" "}
+            <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+              {projectName}
+            </span>
           </DialogDescription>
         </DialogHeader>
 
@@ -141,7 +161,8 @@ export function MemberManagementModal({
           {isManager && (
             <div className="rounded-lg border border-zinc-200 bg-zinc-50/50 p-3.5 dark:border-zinc-800 dark:bg-zinc-900/50 space-y-3">
               <label className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
-                <UserPlus className="h-3.5 w-3.5 text-primary" /> Phân công Giám sát viên mới
+                <UserPlus className="h-3.5 w-3.5 text-primary" /> Phân công Giám
+                sát viên mới
               </label>
 
               {!selectedUser ? (
@@ -173,17 +194,22 @@ export function MemberManagementModal({
                   )}
 
                   {/* Empty state */}
-                  {!isSearching && searchQuery.trim().length >= 2 && searchResults.length === 0 && (
-                    <div className="rounded-lg border border-dashed border-zinc-200 bg-white p-4 text-center text-xs text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
-                      Không tìm thấy người dùng nào phù hợp với &quot;{searchQuery}&quot;
-                    </div>
-                  )}
+                  {!isSearching &&
+                    searchQuery.trim().length >= 2 &&
+                    searchResults.length === 0 && (
+                      <div className="rounded-lg border border-dashed border-zinc-200 bg-white p-4 text-center text-xs text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
+                        Không tìm thấy người dùng nào phù hợp với &quot;
+                        {searchQuery}&quot;
+                      </div>
+                    )}
 
                   {/* Search Results list */}
                   {searchResults.length > 0 && (
                     <div className="max-h-48 overflow-y-auto rounded-lg border border-zinc-200 bg-white divide-y divide-zinc-100 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:divide-zinc-800">
                       {searchResults.map((u) => {
-                        const isAlreadyMember = members.some((m) => m.userId === u.id);
+                        const isAlreadyMember = members.some(
+                          (m) => m.userId === u.id,
+                        );
 
                         return (
                           <div
@@ -217,11 +243,18 @@ export function MemberManagementModal({
 
                             <div>
                               {isAlreadyMember ? (
-                                <Badge variant="secondary" className="text-[10px]">
+                                <Badge
+                                  variant="secondary"
+                                  className="text-[10px]"
+                                >
                                   Đã phân công
                                 </Badge>
                               ) : (
-                                <Button size="sm" variant="ghost" className="h-7 text-xs text-primary hover:text-primary">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-xs text-primary hover:text-primary"
+                                >
                                   Chọn
                                 </Button>
                               )}
@@ -237,7 +270,9 @@ export function MemberManagementModal({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 font-bold text-xs text-primary">
-                        {selectedUser.name ? selectedUser.name.charAt(0).toUpperCase() : "U"}
+                        {selectedUser.name
+                          ? selectedUser.name.charAt(0).toUpperCase()
+                          : "U"}
                       </div>
                       <div>
                         <div className="font-semibold text-xs text-zinc-900 dark:text-zinc-100">
@@ -299,7 +334,9 @@ export function MemberManagementModal({
                     >
                       <div className="flex items-center gap-3">
                         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-100 font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                          {member.user?.name ? member.user.name.charAt(0).toUpperCase() : "U"}
+                          {member.user?.name
+                            ? member.user.name.charAt(0).toUpperCase()
+                            : "U"}
                         </div>
                         <div>
                           <div className="font-medium text-zinc-900 dark:text-zinc-100">
@@ -315,13 +352,20 @@ export function MemberManagementModal({
 
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-[10px]">
-                          {USER_ROLE_VN_LABELS[member.user?.role as UserRoleType] || "Giám sát viên"}
+                          {USER_ROLE_VN_LABELS[
+                            member.user?.role as UserRoleType
+                          ] || "Giám sát viên"}
                         </Badge>
                         {isManager && (
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => setRemoveTarget({ id: member._id, name: displayName })}
+                            onClick={() =>
+                              setRemoveTarget({
+                                id: member._id,
+                                name: displayName,
+                              })
+                            }
                             className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40"
                             title="Xóa thành viên"
                           >

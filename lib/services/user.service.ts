@@ -1,5 +1,5 @@
 import { getUsersCollection, UserDoc } from "@/lib/db/collections";
-import { UserRoleType } from "@/app/constants/role";
+import { UserRoleType } from "@/constants/role";
 import { ObjectId } from "mongodb";
 
 function toObjectId(id: string): ObjectId | string {
@@ -15,7 +15,9 @@ function serializeUser(doc: UserDoc): SerializedUser {
   };
 }
 
-export async function getUserById(userId: string): Promise<SerializedUser | null> {
+export async function getUserById(
+  userId: string,
+): Promise<SerializedUser | null> {
   const usersCol = await getUsersCollection();
   const query = { _id: toObjectId(userId) as any };
   const user = await usersCol.findOne(query);
@@ -25,7 +27,7 @@ export async function getUserById(userId: string): Promise<SerializedUser | null
 
 export async function setUserRole(
   userId: string,
-  role: UserRoleType | string
+  role: UserRoleType | string,
 ): Promise<SerializedUser | null> {
   const usersCol = await getUsersCollection();
   const query = { _id: toObjectId(userId) as any };
@@ -38,7 +40,7 @@ export async function setUserRole(
         updatedAt: new Date(),
       },
     },
-    { returnDocument: "after" }
+    { returnDocument: "after" },
   );
 
   if (!result) return null;
@@ -57,7 +59,7 @@ export interface UserSearchResult {
  */
 export async function searchUsers(
   query: string,
-  limit: number = 10
+  limit: number = 10,
 ): Promise<UserSearchResult[]> {
   const trimmed = query.trim();
   if (trimmed.length < 2) {
@@ -70,10 +72,7 @@ export async function searchUsers(
 
   const docs = await usersCol
     .find({
-      $or: [
-        { email: { $regex: regex } },
-        { name: { $regex: regex } },
-      ],
+      $or: [{ email: { $regex: regex } }, { name: { $regex: regex } }],
     })
     .limit(limit)
     .toArray();
@@ -84,4 +83,3 @@ export async function searchUsers(
     email: doc.email || "",
   }));
 }
-

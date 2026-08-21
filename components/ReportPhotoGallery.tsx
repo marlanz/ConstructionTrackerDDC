@@ -3,11 +3,22 @@
 import { useState } from "react";
 import Image from "next/image";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { uploadReportImage } from "@/app/actions/dailyReport.actions";
 import { useRouter } from "next/navigation";
-import { Camera, Image as ImageIcon, Loader2, Maximize2, Upload } from "lucide-react";
+import {
+  Camera,
+  Image as ImageIcon,
+  Loader2,
+  Maximize2,
+  Upload,
+} from "lucide-react";
 import { toast } from "sonner";
 
 interface ReportPhotoGalleryProps {
@@ -76,7 +87,7 @@ export function ReportPhotoGallery({
               className="group relative cursor-pointer overflow-hidden rounded-lg border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900"
             >
               <AspectRatio ratio={4 / 3}>
-                <img
+                <Image
                   src={url}
                   alt={`Ảnh báo cáo ${idx + 1}`}
                   className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
@@ -117,16 +128,20 @@ export function ReportPhotoGallery({
       )}
 
       {/* Lightbox Dialog */}
-      <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+      <Dialog
+        open={!!selectedImage}
+        onOpenChange={() => setSelectedImage(null)}
+      >
         <DialogContent className="max-w-3xl p-2 bg-black border-zinc-800 text-white">
           <DialogHeader className="p-2 border-b border-zinc-800">
             <DialogTitle className="text-sm font-medium flex items-center gap-2">
-              <ImageIcon className="h-4 w-4" /> Xem trước hình ảnh nhật ký công trình
+              <ImageIcon className="h-4 w-4" /> Xem trước hình ảnh nhật ký công
+              trình
             </DialogTitle>
           </DialogHeader>
           {selectedImage && (
             <div className="relative flex items-center justify-center max-h-[80vh] p-2 overflow-hidden">
-              <img
+              <Image
                 src={selectedImage}
                 alt="Hình ảnh thực địa kích thước đầy đủ"
                 className="max-h-[75vh] w-auto max-w-full object-contain rounded-lg shadow-2xl"

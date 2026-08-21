@@ -55,10 +55,7 @@ export function DashboardView({ user, projects }: DashboardViewProps) {
         </div>
 
         {isManager && (
-          <Button
-            onClick={() => setCreateDialogOpen(true)}
-            className="gap-2"
-          >
+          <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" /> Tạo dự án mới
           </Button>
         )}
@@ -91,7 +88,6 @@ export function DashboardView({ user, projects }: DashboardViewProps) {
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => {
             const statusStyle = getProjectStatusStyle(project.status);
-
             return (
               <Card
                 key={project._id}
@@ -104,6 +100,7 @@ export function DashboardView({ user, projects }: DashboardViewProps) {
                       className="font-mono text-xs font-semibold"
                     >
                       {project.projectCode}
+                      <span></span>
                     </Badge>
                     <Badge className={statusStyle.badgeClass}>
                       {statusStyle.label}
@@ -138,7 +135,8 @@ export function DashboardView({ user, projects }: DashboardViewProps) {
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 shrink-0 text-zinc-400" />
                     <span className="text-sm">
-                      {formatDate(project.startDate)} — {formatDate(project.plannedEndDate)}
+                      {formatDate(project.startDate)} —{" "}
+                      {formatDate(project.plannedEndDate)}
                     </span>
                   </div>
                 </CardContent>

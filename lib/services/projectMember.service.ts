@@ -1,4 +1,4 @@
-import { UserRoleType } from "@/app/constants/role";
+import { UserRoleType } from "@/constants/role";
 import {
   getProjectMembersCollection,
   getUsersCollection,

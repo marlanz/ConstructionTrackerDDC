@@ -36,7 +36,7 @@ import {
   UserCheck,
   UserPlus,
 } from "lucide-react";
-import { USER_ROLE_VN_LABELS, UserRoleType } from "@/app/constants/role";
+import { USER_ROLE_VN_LABELS, UserRoleType } from "@/constants/role";
 
 interface ProjectOverviewViewProps {
   user: {
