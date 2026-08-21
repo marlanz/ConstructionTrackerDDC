@@ -10,7 +10,7 @@ import {
   SerializedProjectMember,
 } from "@/lib/services/projectMember.service";
 import { getProjectMembersCollection } from "@/lib/db/collections";
-import { revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag, updateTag } from "next/cache";
 import { ObjectId } from "mongodb";
 
 /**
@@ -36,7 +36,12 @@ export async function addProjectMember(
     }
 
     const member = await addProjectMemberService(parsed.data.projectId, parsed.data.userId);
+    updateTag(`project:${projectId}`);
+    updateTag("projects");
     revalidateTag(`project:${projectId}`, "max");
+    revalidateTag("projects", "max");
+    revalidatePath(`/projects/${projectId}`);
+    revalidatePath("/projects");
     return ok(member);
   } catch (error: any) {
     if (error.message === "MEMBER_EXISTS") {
@@ -79,7 +84,13 @@ export async function removeProjectMember(memberId: string): Promise<Result<{ re
     }
 
     if (memberDoc) {
-      revalidateTag(`project:${memberDoc.projectId.toString()}`, "max");
+      const projId = memberDoc.projectId.toString();
+      updateTag(`project:${projId}`);
+      updateTag("projects");
+      revalidateTag(`project:${projId}`, "max");
+      revalidateTag("projects", "max");
+      revalidatePath(`/projects/${projId}`);
+      revalidatePath("/projects");
     }
 
     return ok({ removed: true });

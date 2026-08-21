@@ -11,6 +11,14 @@ export const PROJECT_STATUSES = [
 
 export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
 
+export const EDITABLE_PROJECT_STATUSES = [
+  "IN_PROGRESS",
+  "COMPLETED",
+  "CANCELLED",
+] as const;
+
+export type EditableProjectStatus = (typeof EDITABLE_PROJECT_STATUSES)[number];
+
 export const factorySchema = z.object({
   name: z.string().min(1, "Vui lòng nhập tên nhà máy"),
   location: z.string().min(1, "Vui lòng nhập địa chỉ nhà máy"),
@@ -28,8 +36,24 @@ export const createProjectSchema = z.object({
 });
 
 export const updateProjectSchema = createProjectSchema.partial().extend({
-  actualEndDate: z.coerce.date().nullable().optional(),
+  actualEndDate: z.preprocess(
+    (val) => (val === "" ? null : val),
+    z.coerce.date().nullable().optional()
+  ),
+  startDate: z.preprocess(
+    (val) => (val === "" ? undefined : val),
+    z.coerce.date().optional()
+  ),
+  plannedEndDate: z.preprocess(
+    (val) => (val === "" ? undefined : val),
+    z.coerce.date().optional()
+  ),
+  briefPlan: z.preprocess(
+    (val) => (val === "" ? null : val),
+    z.string().nullable().optional()
+  ),
 });
 
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;
 export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
+

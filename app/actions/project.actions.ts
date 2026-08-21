@@ -18,7 +18,7 @@ import {
   SerializedProject,
   updateProject as updateProjectService,
 } from "@/lib/services/project.service";
-import { revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag, updateTag } from "next/cache";
 
 /**
  * Create a new project (MANAGER only).
@@ -45,7 +45,9 @@ export async function createProject(
     }
 
     const project = await createProjectService(parsed.data);
+    updateTag("projects");
     revalidateTag("projects", "max");
+    revalidatePath("/projects");
     return ok(project);
   } catch (error: any) {
     if (error.message === "PROJECT_CODE_EXISTS") {
@@ -91,8 +93,14 @@ export async function updateProject(
     }
 
     const updated = await updateProjectService(projectId, parsed.data);
+    updateTag("projects");
+    updateTag(`project:${projectId}`);
     revalidateTag("projects", "max");
     revalidateTag(`project:${projectId}`, "max");
+    revalidatePath("/projects");
+    revalidatePath(`/projects/${projectId}`);
+    revalidatePath(`/projects/${projectId}/plan`);
+    revalidatePath(`/projects/${projectId}/reports`);
     return ok(updated);
   } catch (error: any) {
     if (error.message === "PROJECT_NOT_FOUND") {
@@ -145,8 +153,12 @@ export async function deleteProject(
     }
 
     await deleteProjectService(projectId);
+    updateTag("projects");
+    updateTag(`project:${projectId}`);
     revalidateTag("projects", "max");
     revalidateTag(`project:${projectId}`, "max");
+    revalidatePath("/projects");
+    revalidatePath(`/projects/${projectId}`);
     return ok({ deleted: true });
   } catch (error: any) {
     console.error("Error deleting project:", error);

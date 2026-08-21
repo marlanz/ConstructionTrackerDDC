@@ -1,5 +1,11 @@
-import { ProjectStatus } from "@/lib/schemas/project.schema";
+import {
+  ProjectStatus,
+  EDITABLE_PROJECT_STATUSES,
+  EditableProjectStatus,
+} from "@/lib/schemas/project.schema";
 import { projectStatusLabels } from "@/lib/i18n/labels";
+
+export { EDITABLE_PROJECT_STATUSES, type EditableProjectStatus };
 
 export interface StatusStyle {
   label: string;

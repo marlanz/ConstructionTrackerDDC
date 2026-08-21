@@ -19,6 +19,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { MemberManagementModal } from "@/components/MemberManagementModal";
 import { DeleteProjectDialog } from "@/components/DeleteProjectDialog";
+import { EditProjectDialog } from "@/components/EditProjectDialog";
 import {
   ArrowLeft,
   ArrowRight,
@@ -28,6 +29,7 @@ import {
   CheckCircle2,
   ClipboardList,
   Clock,
+  Edit,
   ExternalLink,
   FileText,
   ListTodo,
@@ -215,6 +217,7 @@ export function ProjectOverviewView({
 }: ProjectOverviewViewProps) {
   const [memberModalOpen, setMemberModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { project, members, taskSummary } = overview;
   const isManager = user.role === "MANAGER";
   const statusStyle = getProjectStatusStyle(project.status);
@@ -253,12 +256,19 @@ export function ProjectOverviewView({
         {isManager && (
           <div className="flex flex-wrap items-center gap-2">
             <Button
+              onClick={() => setEditDialogOpen(true)}
+              variant="outline"
+              className="gap-2"
+            >
+              <Edit className="h-4 w-4" /> Chỉnh sửa dự án
+            </Button>
+            {/* <Button
               onClick={() => setMemberModalOpen(true)}
               variant="outline"
               className="gap-2"
             >
               <UserPlus className="h-4 w-4" /> Quản lý thành viên giám sát
-            </Button>
+            </Button> */}
             <Button
               onClick={() => setDeleteDialogOpen(true)}
               variant="destructive"
@@ -425,10 +435,21 @@ export function ProjectOverviewView({
           </Card>
           {/* Card 1: Project Details */}
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-base text-brand">
                 Chi tiết dự án
               </CardTitle>
+              {isManager && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="gap-1.5 text-xs"
+                  onClick={() => setEditDialogOpen(true)}
+                >
+                  <Edit className="h-3.5 w-3.5" />
+                  Chỉnh sửa
+                </Button>
+              )}
             </CardHeader>
 
             <CardContent className="space-y-6 text-sm">
@@ -472,6 +493,18 @@ export function ProjectOverviewView({
                     {formatDate(project.plannedEndDate)}
                   </div>
                 </div>
+
+                {project.actualEndDate && (
+                  <div className="space-y-1 sm:col-span-2">
+                    <span className="text-xs font-medium text-zinc-500">
+                      Ngày kết thúc thực tế
+                    </span>
+                    <div className="flex items-center gap-2 font-semibold text-emerald-600 dark:text-emerald-400">
+                      <Calendar className="h-4 w-4 text-emerald-500" />
+                      {formatDate(project.actualEndDate)}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {project.description && (
@@ -502,6 +535,15 @@ export function ProjectOverviewView({
           </Card>
         </div>
       </div>
+
+      {/* Edit Project Dialog */}
+      {isManager && (
+        <EditProjectDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          project={project}
+        />
+      )}
 
       {/* Member Management Modal */}
       <MemberManagementModal
