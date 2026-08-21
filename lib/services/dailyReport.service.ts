@@ -9,9 +9,18 @@ function toObjectId(id: string): ObjectId {
   return new ObjectId(id);
 }
 
-export type SerializedWorkAgendaEntry = Omit<WorkAgendaEntryDoc, "_id" | "taskId"> & {
+export interface WorkAgendaImage {
+  url: string;
+  publicId: string;
+}
+
+export type SerializedWorkAgendaEntry = Omit<
+  WorkAgendaEntryDoc,
+  "_id" | "taskId" | "imgUrl"
+> & {
   _id: string;
   taskId: string | null;
+  imgUrl: WorkAgendaImage[];
 };
 
 export type SerializedDailyReport = Omit<
@@ -28,10 +37,21 @@ export type SerializedDailyReport = Omit<
 };
 
 function serializeWorkAgendaEntry(entry: WorkAgendaEntryDoc): SerializedWorkAgendaEntry {
+  const normalizedImages: WorkAgendaImage[] = (entry.imgUrl || []).map((img: any) => {
+    if (typeof img === "string") {
+      return { url: img, publicId: "" };
+    }
+    return {
+      url: img?.url || "",
+      publicId: img?.publicId || "",
+    };
+  });
+
   return {
     ...entry,
     _id: entry._id.toString(),
     taskId: entry.taskId ? entry.taskId.toString() : null,
+    imgUrl: normalizedImages,
   };
 }
 
@@ -176,10 +196,10 @@ export async function addWorkAgendaEntry(
   return serializeWorkAgendaEntry(newEntryDoc);
 }
 
-export async function addReportImageUrl(
+export async function attachReportImage(
   reportId: string,
   entryId: string,
-  imgUrl: string
+  image: { url: string; publicId: string }
 ): Promise<SerializedDailyReport> {
   const col = await getDailyReportsCollection();
   const reportObjId = toObjectId(reportId);
@@ -188,7 +208,7 @@ export async function addReportImageUrl(
   const result = await col.findOneAndUpdate(
     { _id: reportObjId, "workAgenda._id": entryObjId },
     {
-      $push: { "workAgenda.$.imgUrl": imgUrl } as any,
+      $push: { "workAgenda.$.imgUrl": image } as any,
       $set: { updatedAt: new Date() },
     },
     { returnDocument: "after" }

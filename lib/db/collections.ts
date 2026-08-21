@@ -105,6 +105,14 @@ export interface InstallationDetailDoc {
 }
 
 /**
+ * WorkAgenda image shape per DATA_MODEL_SPEC.md §3.5
+ */
+export interface WorkAgendaImageDoc {
+  url: string;
+  publicId: string;
+}
+
+/**
  * WorkAgendaEntry shape per DATA_MODEL_SPEC.md §3.5
  */
 export interface WorkAgendaEntryDoc {
@@ -112,7 +120,7 @@ export interface WorkAgendaEntryDoc {
   title: string;
   description: string | null;
   taskId: ObjectId | null;
-  imgUrl: string[];
+  imgUrl: WorkAgendaImageDoc[];
 }
 
 /**
