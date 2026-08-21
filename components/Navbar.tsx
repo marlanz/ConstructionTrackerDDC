@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Factory, LogOut } from "lucide-react";
 import { authClient } from "@/lib/auth/auth-client";
 import { useRouter } from "next/navigation";
-import { USER_ROLE_VN_LABELS, type UserRoleType } from "@/app/constants/role";
+import { USER_ROLE_VN_LABELS, type UserRoleType } from "@/constants/role";
 
 interface NavbarProps {
   user: {

@@ -42,10 +42,11 @@ export default async function ProjectDetailPage({
             role: user.role,
           }}
           overview={overviewResult.data}
-          latestReport={latestReportResult.success ? latestReportResult.data : null}
+          latestReport={
+            latestReportResult.success ? latestReportResult.data : null
+          }
         />
       </main>
     </div>
   );
 }
-

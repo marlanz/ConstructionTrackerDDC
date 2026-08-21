@@ -6,6 +6,7 @@ export const PROJECT_STATUSES = [
   "COMPLETED",
   "ON_HOLD",
   "CANCELLED",
+  "LATE",
 ] as const;
 
 export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
@@ -16,10 +17,7 @@ export const factorySchema = z.object({
 });
 
 export const createProjectSchema = z.object({
-  projectCode: z
-    .string()
-    .min(1, "Vui lòng nhập mã dự án")
-    .trim(),
+  projectCode: z.string().min(1, "Vui lòng nhập mã dự án").trim(),
   name: z.string().min(1, "Vui lòng nhập tên dự án").trim(),
   description: z.string().default(""),
   factory: factorySchema,
@@ -29,11 +27,9 @@ export const createProjectSchema = z.object({
   status: z.enum(PROJECT_STATUSES).default("PLANNED"),
 });
 
-export const updateProjectSchema = createProjectSchema
-  .partial()
-  .extend({
-    actualEndDate: z.coerce.date().nullable().optional(),
-  });
+export const updateProjectSchema = createProjectSchema.partial().extend({
+  actualEndDate: z.coerce.date().nullable().optional(),
+});
 
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;
 export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;

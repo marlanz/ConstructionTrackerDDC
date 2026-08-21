@@ -7,12 +7,20 @@ export const reportPersonelSchema = z.object({
   note: z.string().nullable().optional().default(null),
 });
 
+export const workAgendaImageSchema = z.union([
+  z.object({
+    url: z.string().min(1, "URL hình ảnh không được trống"),
+    publicId: z.string().default(""),
+  }),
+  z.string().transform((url) => ({ url, publicId: "" })),
+]);
+
 export const workAgendaEntrySchema = z.object({
   _id: z.string().optional(),
   title: z.string().min(1, "Vui lòng nhập tiêu đề hạng mục công việc").trim(),
   description: z.string().nullable().optional().default(null),
   taskId: z.string().nullable().optional().default(null),
-  imgUrl: z.array(z.string()).default([]),
+  imgUrl: z.array(workAgendaImageSchema).default([]),
 });
 
 export const createDailyReportSchema = z.object({

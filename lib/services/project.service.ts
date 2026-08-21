@@ -228,7 +228,17 @@ export async function deleteProject(projectId: string): Promise<boolean> {
     if (report.workAgenda && Array.isArray(report.workAgenda)) {
       for (const entry of report.workAgenda) {
         if (entry.imgUrl && Array.isArray(entry.imgUrl)) {
-          cloudinaryUrls.push(...entry.imgUrl);
+          for (const img of entry.imgUrl) {
+            if (typeof img === "string") {
+              cloudinaryUrls.push(img);
+            } else if (img && typeof img === "object") {
+              if (img.publicId) {
+                cloudinaryUrls.push(img.publicId);
+              } else if (img.url) {
+                cloudinaryUrls.push(img.url);
+              }
+            }
+          }
         }
       }
     }

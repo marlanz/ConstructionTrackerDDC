@@ -41,6 +41,9 @@ export function CreateProjectDialog({
     setLoading(true);
     setError(null);
 
+    const status =
+      new Date() >= new Date(startDate) ? "IN_PROGRESS" : "PLANNED";
+
     const result = await createProject({
       projectCode,
       name,
@@ -52,7 +55,7 @@ export function CreateProjectDialog({
       briefPlan: briefPlan || null,
       startDate,
       plannedEndDate,
-      status: "PLANNED",
+      status: status,
     });
 
     if (!result.success) {
