@@ -33,16 +33,27 @@ export const createDailyReportSchema = z.object({
   workAgenda: z.array(workAgendaEntrySchema).default([]),
 });
 
-export const updateDailyReportSchema = createDailyReportSchema
-  .partial()
-  .omit({ projectId: true });
+export const updateDailyReportSchema = z.object({
+  date: z.coerce.date().optional(),
+  workStartTime: z.string().min(1, "Vui lòng chọn giờ bắt đầu làm việc").optional(),
+  workEndTime: z.string().min(1, "Vui lòng chọn giờ kết thúc làm việc").optional(),
+  installationMachine: z.array(z.string()).optional(),
+  installationPersonel: z.array(reportPersonelSchema).optional(),
+});
 
 export const addWorkAgendaEntrySchema = z.object({
   reportId: z.string().min(1, "Thiếu ID báo cáo"),
   entry: workAgendaEntrySchema,
 });
 
+export const updateWorkAgendaEntrySchema = z.object({
+  title: z.string().min(1, "Vui lòng nhập tiêu đề hạng mục công việc").trim().optional(),
+  description: z.string().nullable().optional(),
+  taskId: z.string().nullable().optional(),
+});
+
 export type CreateDailyReportInput = z.infer<typeof createDailyReportSchema>;
 export type UpdateDailyReportInput = z.infer<typeof updateDailyReportSchema>;
 export type AddWorkAgendaEntryInput = z.infer<typeof addWorkAgendaEntrySchema>;
 export type WorkAgendaEntryInput = z.infer<typeof workAgendaEntrySchema>;
+export type UpdateWorkAgendaEntryInput = z.infer<typeof updateWorkAgendaEntrySchema>;
