@@ -6,15 +6,15 @@ import { DashboardView } from "./DashboardView";
 import { ProjectListSkeleton } from "@/components/skeletons/ProjectListSkeleton";
 
 async function ProjectsPageContent() {
+  console.time("getCurrentUser");
   const user = await getCurrentUser();
-  if (!user) {
-    redirect("/login");
-  }
+  console.timeEnd("getCurrentUser");
 
-  const projects = await listProjectsForUser({
-    id: user.id,
-    role: user.role,
-  });
+  if (!user) redirect("/login");
+
+  console.time("listProjectsForUser");
+  const projects = await listProjectsForUser({ id: user.id, role: user.role });
+  console.timeEnd("listProjectsForUser");
 
   return (
     <DashboardView

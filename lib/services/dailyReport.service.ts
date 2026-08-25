@@ -1,11 +1,17 @@
-import { DailyReportDoc, getDailyReportsCollection, getProjectsCollection, WorkAgendaEntryDoc } from "@/lib/db/collections";
-import { CreateDailyReportInput, UpdateDailyReportInput, WorkAgendaEntryInput } from "@/lib/schemas/dailyReport.schema";
+import {
+  DailyReportDoc,
+  getDailyReportsCollection,
+  getProjectsCollection,
+  WorkAgendaEntryDoc,
+} from "@/lib/db/collections";
+import {
+  CreateDailyReportInput,
+  UpdateDailyReportInput,
+  WorkAgendaEntryInput,
+} from "@/lib/schemas/dailyReport.schema";
 import { getUserById } from "@/lib/services/user.service";
 import { ObjectId } from "mongodb";
-import {
-  unstable_cacheLife as cacheLife,
-  unstable_cacheTag as cacheTag,
-} from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 
 function toObjectId(id: string): ObjectId {
   if (!ObjectId.isValid(id)) {
@@ -30,7 +36,13 @@ export type SerializedWorkAgendaEntry = Omit<
 
 export type SerializedDailyReport = Omit<
   DailyReportDoc,
-  "_id" | "projectId" | "createdBy" | "date" | "workAgenda" | "createdAt" | "updatedAt"
+  | "_id"
+  | "projectId"
+  | "createdBy"
+  | "date"
+  | "workAgenda"
+  | "createdAt"
+  | "updatedAt"
 > & {
   _id: string;
   projectId: string;
@@ -41,16 +53,20 @@ export type SerializedDailyReport = Omit<
   updatedAt: string;
 };
 
-function serializeWorkAgendaEntry(entry: WorkAgendaEntryDoc): SerializedWorkAgendaEntry {
-  const normalizedImages: WorkAgendaImage[] = (entry.imgUrl || []).map((img: any) => {
-    if (typeof img === "string") {
-      return { url: img, publicId: "" };
-    }
-    return {
-      url: img?.url || "",
-      publicId: img?.publicId || "",
-    };
-  });
+function serializeWorkAgendaEntry(
+  entry: WorkAgendaEntryDoc,
+): SerializedWorkAgendaEntry {
+  const normalizedImages: WorkAgendaImage[] = (entry.imgUrl || []).map(
+    (img: any) => {
+      if (typeof img === "string") {
+        return { url: img, publicId: "" };
+      }
+      return {
+        url: img?.url || "",
+        publicId: img?.publicId || "",
+      };
+    },
+  );
 
   return {
     ...entry,
@@ -60,7 +76,9 @@ function serializeWorkAgendaEntry(entry: WorkAgendaEntryDoc): SerializedWorkAgen
   };
 }
 
-export function serializeDailyReport(doc: DailyReportDoc): SerializedDailyReport {
+export function serializeDailyReport(
+  doc: DailyReportDoc,
+): SerializedDailyReport {
   return {
     ...doc,
     _id: doc._id.toString(),
@@ -73,7 +91,9 @@ export function serializeDailyReport(doc: DailyReportDoc): SerializedDailyReport
   };
 }
 
-export async function getDailyReportById(reportId: string): Promise<SerializedDailyReport | null> {
+export async function getDailyReportById(
+  reportId: string,
+): Promise<SerializedDailyReport | null> {
   if (!ObjectId.isValid(reportId)) return null;
   const col = await getDailyReportsCollection();
   const doc = await col.findOne({ _id: toObjectId(reportId) });
@@ -84,19 +104,27 @@ export async function getDailyReportById(reportId: string): Promise<SerializedDa
 export async function createDailyReport(
   projectId: string,
   createdByUserId: string,
-  data: CreateDailyReportInput
+  data: CreateDailyReportInput,
 ): Promise<SerializedDailyReport> {
   const col = await getDailyReportsCollection();
   const projObjId = toObjectId(projectId);
   const userObjId = toObjectId(createdByUserId);
 
-  const workAgendaDocs: WorkAgendaEntryDoc[] = (data.workAgenda || []).map((entry) => ({
-    _id: entry._id && ObjectId.isValid(entry._id) ? new ObjectId(entry._id) : new ObjectId(),
-    title: entry.title,
-    description: entry.description ?? null,
-    taskId: entry.taskId && ObjectId.isValid(entry.taskId) ? new ObjectId(entry.taskId) : null,
-    imgUrl: entry.imgUrl || [],
-  }));
+  const workAgendaDocs: WorkAgendaEntryDoc[] = (data.workAgenda || []).map(
+    (entry) => ({
+      _id:
+        entry._id && ObjectId.isValid(entry._id)
+          ? new ObjectId(entry._id)
+          : new ObjectId(),
+      title: entry.title,
+      description: entry.description ?? null,
+      taskId:
+        entry.taskId && ObjectId.isValid(entry.taskId)
+          ? new ObjectId(entry.taskId)
+          : null,
+      imgUrl: entry.imgUrl || [],
+    }),
+  );
 
   const now = new Date();
   const doc: Omit<DailyReportDoc, "_id"> = {
@@ -122,7 +150,7 @@ export async function createDailyReport(
 
 export async function updateDailyReport(
   reportId: string,
-  data: UpdateDailyReportInput
+  data: UpdateDailyReportInput,
 ): Promise<SerializedDailyReport> {
   const col = await getDailyReportsCollection();
   const reportObjId = toObjectId(reportId);
@@ -137,16 +165,26 @@ export async function updateDailyReport(
   };
 
   if (data.date !== undefined) updateFields.date = new Date(data.date);
-  if (data.workStartTime !== undefined) updateFields.workStartTime = data.workStartTime;
-  if (data.workEndTime !== undefined) updateFields.workEndTime = data.workEndTime;
-  if (data.installationMachine !== undefined) updateFields.installationMachine = data.installationMachine;
-  if (data.installationPersonel !== undefined) updateFields.installationPersonel = data.installationPersonel;
+  if (data.workStartTime !== undefined)
+    updateFields.workStartTime = data.workStartTime;
+  if (data.workEndTime !== undefined)
+    updateFields.workEndTime = data.workEndTime;
+  if (data.installationMachine !== undefined)
+    updateFields.installationMachine = data.installationMachine;
+  if (data.installationPersonel !== undefined)
+    updateFields.installationPersonel = data.installationPersonel;
   if (data.workAgenda !== undefined) {
     updateFields.workAgenda = data.workAgenda.map((entry) => ({
-      _id: entry._id && ObjectId.isValid(entry._id) ? new ObjectId(entry._id) : new ObjectId(),
+      _id:
+        entry._id && ObjectId.isValid(entry._id)
+          ? new ObjectId(entry._id)
+          : new ObjectId(),
       title: entry.title,
       description: entry.description ?? null,
-      taskId: entry.taskId && ObjectId.isValid(entry.taskId) ? new ObjectId(entry.taskId) : null,
+      taskId:
+        entry.taskId && ObjectId.isValid(entry.taskId)
+          ? new ObjectId(entry.taskId)
+          : null,
       imgUrl: entry.imgUrl || [],
     }));
   }
@@ -154,7 +192,7 @@ export async function updateDailyReport(
   const result = await col.findOneAndUpdate(
     { _id: reportObjId },
     { $set: updateFields },
-    { returnDocument: "after" }
+    { returnDocument: "after" },
   );
 
   if (!result) {
@@ -171,7 +209,7 @@ export async function deleteDailyReport(reportId: string): Promise<boolean> {
 
 export async function addWorkAgendaEntry(
   reportId: string,
-  entry: WorkAgendaEntryInput
+  entry: WorkAgendaEntryInput,
 ): Promise<SerializedWorkAgendaEntry> {
   const col = await getDailyReportsCollection();
   const reportObjId = toObjectId(reportId);
@@ -181,7 +219,10 @@ export async function addWorkAgendaEntry(
     _id: entryObjId,
     title: entry.title,
     description: entry.description ?? null,
-    taskId: entry.taskId && ObjectId.isValid(entry.taskId) ? new ObjectId(entry.taskId) : null,
+    taskId:
+      entry.taskId && ObjectId.isValid(entry.taskId)
+        ? new ObjectId(entry.taskId)
+        : null,
     imgUrl: entry.imgUrl || [],
   };
 
@@ -191,7 +232,7 @@ export async function addWorkAgendaEntry(
       $push: { workAgenda: newEntryDoc },
       $set: { updatedAt: new Date() },
     },
-    { returnDocument: "after" }
+    { returnDocument: "after" },
   );
 
   if (!result) {
@@ -204,7 +245,7 @@ export async function addWorkAgendaEntry(
 export async function attachReportImage(
   reportId: string,
   entryId: string,
-  image: { url: string; publicId: string }
+  image: { url: string; publicId: string },
 ): Promise<SerializedDailyReport> {
   const col = await getDailyReportsCollection();
   const reportObjId = toObjectId(reportId);
@@ -216,7 +257,7 @@ export async function attachReportImage(
       $push: { "workAgenda.$.imgUrl": image } as any,
       $set: { updatedAt: new Date() },
     },
-    { returnDocument: "after" }
+    { returnDocument: "after" },
   );
 
   if (!result) {
@@ -228,7 +269,7 @@ export async function attachReportImage(
 
 export async function listDailyReports(
   projectId: string,
-  filter?: { from?: Date; to?: Date }
+  filter?: { from?: Date; to?: Date },
 ): Promise<SerializedDailyReport[]> {
   "use cache";
   cacheTag(`project:${projectId}:reports`);
@@ -251,7 +292,7 @@ export async function listDailyReports(
  * Returns null when no reports exist yet.
  */
 export async function getLatestDailyReport(
-  projectId: string
+  projectId: string,
 ): Promise<SerializedDailyReport | null> {
   "use cache";
   cacheTag(`project:${projectId}:reports`);
@@ -267,7 +308,7 @@ export async function getLatestDailyReport(
 
 export async function getConstructionDayNumber(
   projectId: string,
-  targetDate: Date
+  targetDate: Date,
 ): Promise<number> {
   const projectsCol = await getProjectsCollection();
   const project = await projectsCol.findOne({ _id: toObjectId(projectId) });
@@ -295,7 +336,7 @@ export type LatestReportPayload = {
  * for project overview. Cached with "use cache".
  */
 export async function getLatestDailyReportPayload(
-  projectId: string
+  projectId: string,
 ): Promise<LatestReportPayload> {
   "use cache";
   cacheTag(`project:${projectId}:reports`);

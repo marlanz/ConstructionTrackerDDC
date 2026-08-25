@@ -5,15 +5,19 @@ import {
   getProjectsCollection,
   ProjectDoc,
 } from "@/lib/db/collections";
-import { CreateProjectInput, UpdateProjectInput } from "@/lib/schemas/project.schema";
-import { hasMembership, listMembersByProject, ProjectMemberWithUser } from "@/lib/services/projectMember.service";
+import {
+  CreateProjectInput,
+  UpdateProjectInput,
+} from "@/lib/schemas/project.schema";
+import {
+  hasMembership,
+  listMembersByProject,
+  ProjectMemberWithUser,
+} from "@/lib/services/projectMember.service";
 import { getTaskSummaryForProject } from "@/lib/services/installationDetail.service";
 import { deleteCloudinaryImages } from "@/lib/cloudinary";
 import { ObjectId } from "mongodb";
-import {
-  unstable_cacheLife as cacheLife,
-  unstable_cacheTag as cacheTag,
-} from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 
 function toObjectId(id: string): ObjectId {
   if (!ObjectId.isValid(id)) {
@@ -24,7 +28,12 @@ function toObjectId(id: string): ObjectId {
 
 export type SerializedProject = Omit<
   ProjectDoc,
-  "_id" | "startDate" | "plannedEndDate" | "actualEndDate" | "createdAt" | "updatedAt"
+  | "_id"
+  | "startDate"
+  | "plannedEndDate"
+  | "actualEndDate"
+  | "createdAt"
+  | "updatedAt"
 > & {
   _id: string;
   startDate: string;
@@ -52,13 +61,15 @@ export function serializeProject(doc: ProjectDoc): SerializedProject {
  */
 export async function canAccessProject(
   user: { id: string; role: string },
-  projectId: string
+  projectId: string,
 ): Promise<boolean> {
   if (user.role === "MANAGER") return true;
   return hasMembership(user.id, projectId);
 }
 
-export async function getProjectById(projectId: string): Promise<SerializedProject | null> {
+export async function getProjectById(
+  projectId: string,
+): Promise<SerializedProject | null> {
   "use cache";
   cacheTag(`project:${projectId}`);
   cacheLife("minutes");
@@ -69,7 +80,9 @@ export async function getProjectById(projectId: string): Promise<SerializedProje
   return serializeProject(doc);
 }
 
-export async function createProject(data: CreateProjectInput): Promise<SerializedProject> {
+export async function createProject(
+  data: CreateProjectInput,
+): Promise<SerializedProject> {
   const col = await getProjectsCollection();
 
   // Check code uniqueness
@@ -103,7 +116,7 @@ export async function createProject(data: CreateProjectInput): Promise<Serialize
 
 export async function updateProject(
   projectId: string,
-  data: UpdateProjectInput
+  data: UpdateProjectInput,
 ): Promise<SerializedProject> {
   const col = await getProjectsCollection();
   const projObjId = toObjectId(projectId);
@@ -127,22 +140,28 @@ export async function updateProject(
     updatedAt: new Date(),
   };
 
-  if (data.projectCode !== undefined) updateFields.projectCode = data.projectCode;
+  if (data.projectCode !== undefined)
+    updateFields.projectCode = data.projectCode;
   if (data.name !== undefined) updateFields.name = data.name;
-  if (data.description !== undefined) updateFields.description = data.description;
+  if (data.description !== undefined)
+    updateFields.description = data.description;
   if (data.factory !== undefined) updateFields.factory = data.factory;
   if (data.briefPlan !== undefined) updateFields.briefPlan = data.briefPlan;
-  if (data.startDate !== undefined) updateFields.startDate = new Date(data.startDate);
-  if (data.plannedEndDate !== undefined) updateFields.plannedEndDate = new Date(data.plannedEndDate);
+  if (data.startDate !== undefined)
+    updateFields.startDate = new Date(data.startDate);
+  if (data.plannedEndDate !== undefined)
+    updateFields.plannedEndDate = new Date(data.plannedEndDate);
   if (data.actualEndDate !== undefined) {
-    updateFields.actualEndDate = data.actualEndDate ? new Date(data.actualEndDate) : null;
+    updateFields.actualEndDate = data.actualEndDate
+      ? new Date(data.actualEndDate)
+      : null;
   }
   if (data.status !== undefined) updateFields.status = data.status;
 
   const result = await col.findOneAndUpdate(
     { _id: projObjId },
     { $set: updateFields },
-    { returnDocument: "after" }
+    { returnDocument: "after" },
   );
 
   if (!result) {
@@ -195,7 +214,9 @@ export interface ProjectOverview {
   };
 }
 
-export async function getProjectOverview(projectId: string): Promise<ProjectOverview | null> {
+export async function getProjectOverview(
+  projectId: string,
+): Promise<ProjectOverview | null> {
   "use cache";
   cacheTag(`project:${projectId}`);
   cacheLife("minutes");
@@ -231,7 +252,9 @@ export async function deleteProject(projectId: string): Promise<boolean> {
 
   // 1. Collect and delete all Cloudinary media assets
   const dailyReportsCol = await getDailyReportsCollection();
-  const reports = await dailyReportsCol.find({ projectId: projObjId }).toArray();
+  const reports = await dailyReportsCol
+    .find({ projectId: projObjId })
+    .toArray();
 
   const cloudinaryUrls: string[] = [];
   if (project.briefPlan) {

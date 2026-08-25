@@ -5,10 +5,7 @@ import {
   ProjectMemberDoc,
 } from "@/lib/db/collections";
 import { ObjectId } from "mongodb";
-import {
-  unstable_cacheLife as cacheLife,
-  unstable_cacheTag as cacheTag,
-} from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 
 import { cache } from "react";
 
@@ -51,20 +48,19 @@ function serializeProjectMember(
  * Check if a user is a member of a project.
  * Deduplicated per-request via React cache().
  */
-export const hasMembership = cache(async (
-  userId: string,
-  projectId: string,
-): Promise<boolean> => {
-  if (!ObjectId.isValid(userId) || !ObjectId.isValid(projectId)) {
-    return false;
-  }
-  const col = await getProjectMembersCollection();
-  const count = await col.countDocuments({
-    projectId: toObjectId(projectId),
-    userId: toObjectId(userId),
-  });
-  return count > 0;
-});
+export const hasMembership = cache(
+  async (userId: string, projectId: string): Promise<boolean> => {
+    if (!ObjectId.isValid(userId) || !ObjectId.isValid(projectId)) {
+      return false;
+    }
+    const col = await getProjectMembersCollection();
+    const count = await col.countDocuments({
+      projectId: toObjectId(projectId),
+      userId: toObjectId(userId),
+    });
+    return count > 0;
+  },
+);
 
 export async function addProjectMember(
   projectId: string,
