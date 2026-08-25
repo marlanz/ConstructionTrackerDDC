@@ -57,7 +57,7 @@ function serializeWorkAgendaEntry(
   entry: WorkAgendaEntryDoc,
 ): SerializedWorkAgendaEntry {
   const normalizedImages: WorkAgendaImage[] = (entry.imgUrl || []).map(
-    (img: any) => {
+    (img: string | { url?: string; publicId?: string }) => {
       if (typeof img === "string") {
         return { url: img, publicId: "" };
       }
@@ -173,21 +173,6 @@ export async function updateDailyReport(
     updateFields.installationMachine = data.installationMachine;
   if (data.installationPersonel !== undefined)
     updateFields.installationPersonel = data.installationPersonel;
-  if (data.workAgenda !== undefined) {
-    updateFields.workAgenda = data.workAgenda.map((entry) => ({
-      _id:
-        entry._id && ObjectId.isValid(entry._id)
-          ? new ObjectId(entry._id)
-          : new ObjectId(),
-      title: entry.title,
-      description: entry.description ?? null,
-      taskId:
-        entry.taskId && ObjectId.isValid(entry.taskId)
-          ? new ObjectId(entry.taskId)
-          : null,
-      imgUrl: entry.imgUrl || [],
-    }));
-  }
 
   const result = await col.findOneAndUpdate(
     { _id: reportObjId },
@@ -252,12 +237,16 @@ export async function attachReportImage(
   const entryObjId = toObjectId(entryId);
 
   const result = await col.findOneAndUpdate(
-    { _id: reportObjId, "workAgenda._id": entryObjId },
+    { _id: reportObjId },
     {
-      $push: { "workAgenda.$.imgUrl": image } as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      $push: { "workAgenda.$[entry].imgUrl": image } as any,
       $set: { updatedAt: new Date() },
     },
-    { returnDocument: "after" },
+    {
+      arrayFilters: [{ "entry._id": entryObjId }],
+      returnDocument: "after",
+    },
   );
 
   if (!result) {
@@ -267,6 +256,107 @@ export async function attachReportImage(
   return serializeDailyReport(result);
 }
 
+export async function updateWorkAgendaEntry(
+  reportId: string,
+  entryId: string,
+  data: {
+    title?: string;
+    description?: string | null;
+    taskId?: string | null;
+  },
+): Promise<SerializedDailyReport> {
+  const col = await getDailyReportsCollection();
+  const reportObjId = toObjectId(reportId);
+  const entryObjId = toObjectId(entryId);
+
+  const setFields: Record<string, string | null | Date | ObjectId> = {
+    updatedAt: new Date(),
+  };
+  if (data.title !== undefined) {
+    setFields["workAgenda.$[entry].title"] = data.title;
+  }
+  if (data.description !== undefined) {
+    setFields["workAgenda.$[entry].description"] = data.description;
+  }
+  if (data.taskId !== undefined) {
+    setFields["workAgenda.$[entry].taskId"] =
+      data.taskId && ObjectId.isValid(data.taskId)
+        ? new ObjectId(data.taskId)
+        : null;
+  }
+
+  const result = await col.findOneAndUpdate(
+    { _id: reportObjId },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    { $set: setFields } as any,
+    {
+      arrayFilters: [{ "entry._id": entryObjId }],
+      returnDocument: "after",
+    },
+  );
+
+  if (!result) {
+    throw new Error("REPORT_OR_ENTRY_NOT_FOUND");
+  }
+
+  return serializeDailyReport(result);
+}
+
+export async function removeWorkAgendaEntry(
+  reportId: string,
+  entryId: string,
+): Promise<SerializedDailyReport> {
+  const col = await getDailyReportsCollection();
+  const reportObjId = toObjectId(reportId);
+  const entryObjId = toObjectId(entryId);
+
+  const result = await col.findOneAndUpdate(
+    { _id: reportObjId },
+    {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      $pull: { workAgenda: { _id: entryObjId } } as any,
+      $set: { updatedAt: new Date() },
+    },
+    { returnDocument: "after" },
+  );
+
+  if (!result) {
+    throw new Error("REPORT_NOT_FOUND");
+  }
+
+  return serializeDailyReport(result);
+}
+
+export async function deleteReportImage(
+  reportId: string,
+  entryId: string,
+  publicId: string,
+): Promise<SerializedDailyReport> {
+  const col = await getDailyReportsCollection();
+  const reportObjId = toObjectId(reportId);
+  const entryObjId = toObjectId(entryId);
+
+  const result = await col.findOneAndUpdate(
+    { _id: reportObjId },
+    {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      $pull: { "workAgenda.$[entry].imgUrl": { publicId } } as any,
+      $set: { updatedAt: new Date() },
+    },
+    {
+      arrayFilters: [{ "entry._id": entryObjId }],
+      returnDocument: "after",
+    },
+  );
+
+  if (!result) {
+    throw new Error("REPORT_OR_ENTRY_NOT_FOUND");
+  }
+
+  return serializeDailyReport(result);
+}
+
+
 export async function listDailyReports(
   projectId: string,
   filter?: { from?: Date; to?: Date },
@@ -275,6 +365,7 @@ export async function listDailyReports(
   cacheTag(`project:${projectId}:reports`);
   cacheLife("minutes");
   const col = await getDailyReportsCollection();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const query: any = { projectId: toObjectId(projectId) };
 
   if (filter?.from || filter?.to) {

@@ -7,6 +7,7 @@ import { fail, ok, Result } from "@/lib/result";
 import {
   createDailyReportSchema,
   updateDailyReportSchema,
+  updateWorkAgendaEntrySchema,
   workAgendaEntrySchema,
 } from "@/lib/schemas/dailyReport.schema";
 import {
@@ -14,14 +15,17 @@ import {
   addWorkAgendaEntry as addWorkAgendaEntryService,
   createDailyReport as createDailyReportService,
   deleteDailyReport as deleteDailyReportService,
+  deleteReportImage as deleteReportImageService,
   getConstructionDayNumber as getConstructionDayNumberService,
   getDailyReportById,
   getLatestDailyReportPayload as getLatestDailyReportPayloadService,
   LatestReportPayload,
   listDailyReports as listDailyReportsService,
+  removeWorkAgendaEntry as removeWorkAgendaEntryService,
   SerializedDailyReport,
   SerializedWorkAgendaEntry,
   updateDailyReport as updateDailyReportService,
+  updateWorkAgendaEntry as updateWorkAgendaEntryService,
 } from "@/lib/services/dailyReport.service";
 import { canAccessProject } from "@/lib/services/project.service";
 import { hasMembership } from "@/lib/services/projectMember.service";
@@ -92,7 +96,7 @@ export async function createDailyReport(
     revalidatePath(`/projects/${projectId}`);
     revalidatePath(`/projects/${projectId}/reports`);
     return ok(report);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating daily report:", error);
     return fail(
       "Đã xảy ra lỗi khi tạo báo cáo hằng ngày",
@@ -146,8 +150,8 @@ export async function addWorkAgendaEntry(
     revalidatePath(`/projects/${report.projectId}`);
     revalidatePath(`/projects/${report.projectId}/reports`);
     return ok(entry);
-  } catch (error: any) {
-    if (error.message === "REPORT_NOT_FOUND") {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === "REPORT_NOT_FOUND") {
       return fail(
         "Không tìm thấy báo cáo nhật ký công trình",
         ERROR_CODES.NOT_FOUND,
@@ -207,7 +211,7 @@ export async function getUploadSignature(): Promise<
     );
 
     return ok({ timestamp, signature, apiKey, cloudName });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error generating upload signature:", error);
     return fail(
       "Đã xảy ra lỗi khi tạo chữ ký tải ảnh",
@@ -271,8 +275,8 @@ export async function attachReportImage(
       publicId: image.publicId || "",
       report: updatedReport,
     });
-  } catch (error: any) {
-    if (error.message === "REPORT_OR_ENTRY_NOT_FOUND") {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === "REPORT_OR_ENTRY_NOT_FOUND") {
       return fail(
         "Không tìm thấy báo cáo hoặc hạng mục công việc",
         ERROR_CODES.NOT_FOUND,
@@ -331,8 +335,8 @@ export async function updateDailyReport(
     revalidatePath(`/projects/${report.projectId}`);
     revalidatePath(`/projects/${report.projectId}/reports`);
     return ok(updated);
-  } catch (error: any) {
-    if (error.message === "REPORT_NOT_FOUND") {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === "REPORT_NOT_FOUND") {
       return fail(
         "Không tìm thấy báo cáo nhật ký công trình",
         ERROR_CODES.NOT_FOUND,
@@ -345,6 +349,218 @@ export async function updateDailyReport(
     );
   }
 }
+
+/**
+ * Update text and task link of a specific work agenda entry (SUPERVISOR only on assigned project).
+ */
+export async function updateWorkAgendaEntry(
+  reportId: string,
+  entryId: string,
+  input: unknown,
+): Promise<Result<SerializedDailyReport>> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
+    }
+
+    const report = await getDailyReportById(reportId);
+    if (!report) {
+      return fail(
+        "Không tìm thấy báo cáo nhật ký công trình",
+        ERROR_CODES.NOT_FOUND,
+      );
+    }
+
+    const isSupervisor = await canWriteDailyReport(user.id, report.projectId);
+    if (!isSupervisor) {
+      return fail(
+        "Chỉ có giám sát viên được phân công mới có quyền cập nhật hạng mục công việc cho dự án này",
+        ERROR_CODES.FORBIDDEN,
+      );
+    }
+
+    const parsed = updateWorkAgendaEntrySchema.safeParse(input);
+    if (!parsed.success) {
+      return fail(
+        parsed.error.issues[0]?.message || "Dữ liệu nhập không hợp lệ",
+        ERROR_CODES.VALIDATION_ERROR,
+      );
+    }
+
+    const updated = await updateWorkAgendaEntryService(
+      reportId,
+      entryId,
+      parsed.data,
+    );
+    updateTag(`project:${report.projectId}:reports`);
+    updateTag(`project:${report.projectId}`);
+    revalidateTag(`project:${report.projectId}:reports`, "max");
+    revalidateTag(`project:${report.projectId}`, "max");
+    revalidatePath(`/projects/${report.projectId}`);
+    revalidatePath(`/projects/${report.projectId}/reports`);
+    return ok(updated);
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === "REPORT_OR_ENTRY_NOT_FOUND") {
+      return fail(
+        "Không tìm thấy báo cáo hoặc hạng mục công việc",
+        ERROR_CODES.NOT_FOUND,
+      );
+    }
+    console.error("Error updating work agenda entry:", error);
+    return fail(
+      "Đã xảy ra lỗi khi cập nhật hạng mục công việc",
+      ERROR_CODES.INTERNAL_ERROR,
+    );
+  }
+}
+
+/**
+ * Remove a work agenda entry and delete all its associated images from Cloudinary (SUPERVISOR only on assigned project).
+ */
+export async function removeWorkAgendaEntry(
+  reportId: string,
+  entryId: string,
+): Promise<Result<{ removed: boolean }>> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
+    }
+
+    const report = await getDailyReportById(reportId);
+    if (!report) {
+      return fail(
+        "Không tìm thấy báo cáo nhật ký công trình",
+        ERROR_CODES.NOT_FOUND,
+      );
+    }
+
+    const isSupervisor = await canWriteDailyReport(user.id, report.projectId);
+    if (!isSupervisor) {
+      return fail(
+        "Chỉ có giám sát viên được phân công mới có quyền xóa hạng mục công việc cho dự án này",
+        ERROR_CODES.FORBIDDEN,
+      );
+    }
+
+    const entry = (report.workAgenda || []).find((e) => e._id === entryId);
+    if (!entry) {
+      return fail(
+        "Không tìm thấy hạng mục công việc cần xóa",
+        ERROR_CODES.NOT_FOUND,
+      );
+    }
+
+    // 1. Delete all associated photos from Cloudinary FIRST
+    for (const img of entry.imgUrl || []) {
+      if (img && img.publicId) {
+        const destroyRes = await cloudinary.uploader.destroy(img.publicId);
+        if (destroyRes.result !== "ok" && destroyRes.result !== "not found") {
+          return fail(
+            `Không thể xóa ảnh (${img.publicId}) khỏi Cloudinary`,
+            ERROR_CODES.INTERNAL_ERROR,
+          );
+        }
+      }
+    }
+
+    // 2. Remove the entry from MongoDB
+    await removeWorkAgendaEntryService(reportId, entryId);
+    updateTag(`project:${report.projectId}:reports`);
+    updateTag(`project:${report.projectId}`);
+    revalidateTag(`project:${report.projectId}:reports`, "max");
+    revalidateTag(`project:${report.projectId}`, "max");
+    revalidatePath(`/projects/${report.projectId}`);
+    revalidatePath(`/projects/${report.projectId}/reports`);
+    return ok({ removed: true });
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === "REPORT_NOT_FOUND") {
+      return fail(
+        "Không tìm thấy báo cáo nhật ký công trình",
+        ERROR_CODES.NOT_FOUND,
+      );
+    }
+    console.error("Error removing work agenda entry:", error);
+    return fail(
+      "Đã xảy ra lỗi khi xóa hạng mục công việc",
+      ERROR_CODES.INTERNAL_ERROR,
+    );
+  }
+}
+
+/**
+ * Delete a single image from Cloudinary FIRST, then remove from MongoDB workAgenda[].imgUrl (SUPERVISOR only).
+ */
+export async function deleteReportImage(
+  reportId: string,
+  entryId: string,
+  publicId: string,
+): Promise<Result<{ deleted: boolean }>> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
+    }
+
+    const report = await getDailyReportById(reportId);
+    if (!report) {
+      return fail(
+        "Không tìm thấy báo cáo nhật ký công trình",
+        ERROR_CODES.NOT_FOUND,
+      );
+    }
+
+    const isSupervisor = await canWriteDailyReport(user.id, report.projectId);
+    if (!isSupervisor) {
+      return fail(
+        "Chỉ có giám sát viên được phân công mới có quyền xóa ảnh báo cáo này",
+        ERROR_CODES.FORBIDDEN,
+      );
+    }
+
+    if (!publicId || typeof publicId !== "string") {
+      return fail(
+        "Mã định danh hình ảnh không hợp lệ (publicId)",
+        ERROR_CODES.VALIDATION_ERROR,
+      );
+    }
+
+    // 1. Delete from Cloudinary FIRST
+    const destroyRes = await cloudinary.uploader.destroy(publicId);
+    if (destroyRes.result !== "ok" && destroyRes.result !== "not found") {
+      return fail(
+        "Không thể xóa ảnh khỏi Cloudinary",
+        ERROR_CODES.INTERNAL_ERROR,
+      );
+    }
+
+    // 2. Remove the image from MongoDB
+    await deleteReportImageService(reportId, entryId, publicId);
+
+    updateTag(`project:${report.projectId}:reports`);
+    updateTag(`project:${report.projectId}`);
+    revalidateTag(`project:${report.projectId}:reports`, "max");
+    revalidateTag(`project:${report.projectId}`, "max");
+    revalidatePath(`/projects/${report.projectId}`);
+    revalidatePath(`/projects/${report.projectId}/reports`);
+
+    return ok({ deleted: true });
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === "REPORT_OR_ENTRY_NOT_FOUND") {
+      return fail(
+        "Không tìm thấy báo cáo hoặc hạng mục công việc",
+        ERROR_CODES.NOT_FOUND,
+      );
+    }
+    console.error("Error deleting report image:", error);
+    return fail(
+      "Đã xảy ra lỗi khi xóa hình ảnh báo cáo",
+      ERROR_CODES.INTERNAL_ERROR,
+    );
+  }
+}
+
 
 /**
  * Delete a daily report (SUPERVISOR only on assigned project).
@@ -382,7 +598,7 @@ export async function deleteDailyReport(
     revalidatePath(`/projects/${report.projectId}`);
     revalidatePath(`/projects/${report.projectId}/reports`);
     return ok({ deleted: success });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error deleting daily report:", error);
     return fail(
       "Đã xảy ra lỗi khi xóa báo cáo hằng ngày",
@@ -421,7 +637,7 @@ export async function listDailyReports(
 
     const reports = await listDailyReportsService(projectId, filter);
     return ok(reports);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error listing daily reports:", error);
     return fail(
       "Đã xảy ra lỗi khi tải danh sách báo cáo hằng ngày",
@@ -464,8 +680,8 @@ export async function getConstructionDayNumber(
 
     const dayNumber = await getConstructionDayNumberService(projectId, date);
     return ok({ dayNumber });
-  } catch (error: any) {
-    if (error.message === "PROJECT_NOT_FOUND") {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === "PROJECT_NOT_FOUND") {
       return fail("Không tìm thấy dự án", ERROR_CODES.NOT_FOUND);
     }
     console.error("Error computing construction day number:", error);
@@ -503,7 +719,7 @@ export async function getLatestDailyReport(
 
     const payload = await getLatestDailyReportPayloadService(projectId);
     return ok(payload);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching latest daily report:", error);
     return fail(
       "Đã xảy ra lỗi khi tải báo cáo hằng ngày mới nhất",
@@ -511,3 +727,4 @@ export async function getLatestDailyReport(
     );
   }
 }
+

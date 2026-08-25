@@ -12,9 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CreateReportModal } from "@/components/CreateReportModal";
-import { ReportPhotoGallery } from "@/components/ReportPhotoGallery";
-import { AlertDialog } from "@/components/ui/alert-dialog";
-import { deleteDailyReport } from "@/app/actions/dailyReport.actions";
+import { DailyReportCard } from "./DailyReportCard";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -87,23 +85,6 @@ export function DailyReportsView({
     return Math.max(1, diffDays + 1);
   };
 
-  // AlertDialog state for deleting report
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
-
-  const confirmDeleteReport = async () => {
-    if (!deleteTargetId) return;
-    setDeleting(true);
-    const res = await deleteDailyReport(deleteTargetId);
-    setDeleting(false);
-    setDeleteTargetId(null);
-    if (res.success) {
-      toast.success("Đã xóa báo cáo nhật ký công trình thành công");
-      router.refresh();
-    } else {
-      toast.error(res.error || "Xóa báo cáo nhật ký thất bại");
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -220,135 +201,14 @@ export function DailyReportsView({
             const dayNumber = computeDayNumber(report.date);
 
             return (
-              <Card
+              <DailyReportCard
                 key={report._id}
-                className="overflow-hidden border-zinc-200 dark:border-zinc-800"
-              >
-                <CardHeader className="bg-zinc-50/50 border-b border-zinc-100 p-4 sm:p-6 dark:bg-zinc-900/50 dark:border-zinc-800/60">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                      <Badge className="bg-zinc-900 text-zinc-50 dark:bg-zinc-50 dark:text-zinc-900 font-mono font-bold">
-                        Ngày {dayNumber}
-                      </Badge>
-                      <div>
-                        <CardTitle className="text-base font-bold flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-zinc-400" />
-                          {formatDateWithWeekday(report.date)}
-                        </CardTitle>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3 text-xs text-zinc-500">
-                      <div className="flex items-center gap-1 font-mono">
-                        <Clock className="h-3.5 w-3.5 text-zinc-400" />
-                        {report.workStartTime} — {report.workEndTime}
-                      </div>
-
-                      {isSupervisor && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setDeleteTargetId(report._id)}
-                          className="h-8 w-8 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40"
-                          title="Xóa báo cáo"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Summary Bar: Machinery & Personnel */}
-                  <div className="flex flex-wrap gap-4 pt-3 text-xs text-zinc-600 dark:text-zinc-400">
-                    {report.installationMachine &&
-                      report.installationMachine.length > 0 && (
-                        <div className="flex items-center gap-1.5">
-                          <Wrench className="h-3.5 w-3.5 text-zinc-400" />
-                          <span className="font-medium">Thiết bị/Máy móc:</span>
-                          <div className="flex flex-wrap gap-1">
-                            {report.installationMachine.map((m, i) => (
-                              <Badge
-                                key={i}
-                                variant="outline"
-                                className="text-[10px] py-0 px-1.5"
-                              >
-                                {m}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                    {report.installationPersonel &&
-                      report.installationPersonel.length > 0 && (
-                        <div className="flex items-center gap-1.5">
-                          <Users className="h-3.5 w-3.5 text-zinc-400" />
-                          <span className="font-medium">Nhân lực:</span>
-                          <span>
-                            {report.installationPersonel
-                              .map((p) => `${p.amount} ${p.role}`)
-                              .join(", ")}
-                          </span>
-                        </div>
-                      )}
-                  </div>
-                </CardHeader>
-
-                <CardContent className="p-4 sm:p-6 space-y-6">
-                  {/* Work Agenda Entries */}
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-                      Nội dung công việc ({report.workAgenda.length})
-                    </h4>
-
-                    {report.workAgenda.map((entry) => {
-                      const linkedTask = entry.taskId
-                        ? taskMap.get(entry.taskId)
-                        : null;
-
-                      return (
-                        <div
-                          key={entry._id}
-                          className="rounded-xl border border-zinc-100 bg-white p-4 space-y-3 dark:border-zinc-800/80 dark:bg-zinc-950"
-                        >
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <h5 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                                {entry.title}
-                              </h5>
-                              {linkedTask && (
-                                <Badge
-                                  variant="secondary"
-                                  className="text-[10px] font-mono gap-1"
-                                >
-                                  <LinkIcon className="h-3 w-3" />[
-                                  {linkedTask.sectionCode || "WBS"}]{" "}
-                                  {linkedTask.agenda} ({linkedTask.progression}
-                                  %)
-                                </Badge>
-                              )}
-                            </div>
-
-                            {entry.description && (
-                              <p className="text-xs text-zinc-600 dark:text-zinc-400">
-                                {entry.description}
-                              </p>
-                            )}
-                          </div>
-
-                          {/* Photo Gallery & Cloudinary Upload */}
-                          <ReportPhotoGallery
-                            reportId={report._id}
-                            entryId={entry._id}
-                            images={entry.imgUrl || []}
-                            isSupervisor={isSupervisor}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
+                report={report}
+                dayNumber={dayNumber}
+                taskMap={taskMap}
+                tasks={tasks}
+                isSupervisor={isSupervisor}
+              />
             );
           })}
         </div>
@@ -363,18 +223,6 @@ export function DailyReportsView({
           tasks={tasks}
         />
       )}
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        open={!!deleteTargetId}
-        onOpenChange={() => setDeleteTargetId(null)}
-        title="Xóa báo cáo nhật ký công trình?"
-        description="Bạn có chắc chắn muốn xóa báo cáo hằng ngày này? Tất cả các nhật ký công việc và hình ảnh liên quan của ngày này sẽ bị xóa vĩnh viễn."
-        confirmLabel="Xóa báo cáo"
-        variant="destructive"
-        loading={deleting}
-        onConfirm={confirmDeleteReport}
-      />
     </div>
   );
 }
