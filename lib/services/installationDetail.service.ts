@@ -1,10 +1,13 @@
-import { getInstallationDetailCollection, InstallationDetailDoc } from "@/lib/db/collections";
-import { CreateInstallationTaskInput, UpdateInstallationTaskInput } from "@/lib/schemas/installationDetail.schema";
-import { ObjectId } from "mongodb";
 import {
-  unstable_cacheLife as cacheLife,
-  unstable_cacheTag as cacheTag,
-} from "next/cache";
+  getInstallationDetailCollection,
+  InstallationDetailDoc,
+} from "@/lib/db/collections";
+import {
+  CreateInstallationTaskInput,
+  UpdateInstallationTaskInput,
+} from "@/lib/schemas/installationDetail.schema";
+import { ObjectId } from "mongodb";
+import { cacheLife, cacheTag } from "next/cache";
 
 function toObjectId(id: string): ObjectId {
   if (!ObjectId.isValid(id)) {
@@ -15,7 +18,12 @@ function toObjectId(id: string): ObjectId {
 
 export type SerializedInstallationTask = Omit<
   InstallationDetailDoc,
-  "_id" | "projectId" | "plannedStartDate" | "plannedEndDate" | "createdAt" | "updatedAt"
+  | "_id"
+  | "projectId"
+  | "plannedStartDate"
+  | "plannedEndDate"
+  | "createdAt"
+  | "updatedAt"
 > & {
   _id: string;
   projectId: string;
@@ -25,7 +33,9 @@ export type SerializedInstallationTask = Omit<
   updatedAt: string;
 };
 
-export function serializeInstallationTask(doc: InstallationDetailDoc): SerializedInstallationTask {
+export function serializeInstallationTask(
+  doc: InstallationDetailDoc,
+): SerializedInstallationTask {
   return {
     ...doc,
     _id: doc._id.toString(),
@@ -38,7 +48,7 @@ export function serializeInstallationTask(doc: InstallationDetailDoc): Serialize
 }
 
 export async function getInstallationTaskById(
-  taskId: string
+  taskId: string,
 ): Promise<SerializedInstallationTask | null> {
   if (!ObjectId.isValid(taskId)) return null;
   const col = await getInstallationDetailCollection();
@@ -49,7 +59,7 @@ export async function getInstallationTaskById(
 
 export async function createInstallationTask(
   projectId: string,
-  data: CreateInstallationTaskInput
+  data: CreateInstallationTaskInput,
 ): Promise<SerializedInstallationTask> {
   const col = await getInstallationDetailCollection();
   const projObjId = toObjectId(projectId);
@@ -96,7 +106,7 @@ export async function createInstallationTask(
 
 export async function updateInstallationTask(
   taskId: string,
-  data: UpdateInstallationTaskInput
+  data: UpdateInstallationTaskInput,
 ): Promise<SerializedInstallationTask> {
   const col = await getInstallationDetailCollection();
   const taskObjId = toObjectId(taskId);
@@ -111,25 +121,34 @@ export async function updateInstallationTask(
   };
 
   if (data.sequence !== undefined) updateFields.sequence = data.sequence;
-  if (data.sectionCode !== undefined) updateFields.sectionCode = data.sectionCode;
+  if (data.sectionCode !== undefined)
+    updateFields.sectionCode = data.sectionCode;
   if (data.agenda !== undefined) updateFields.agenda = data.agenda;
   if (data.qty !== undefined) updateFields.qty = data.qty;
   if (data.unit !== undefined) updateFields.unit = data.unit;
   if (data.dimension !== undefined) updateFields.dimension = data.dimension;
-  if (data.installationLocation !== undefined) updateFields.installationLocation = data.installationLocation;
-  if (data.installationEquipments !== undefined) updateFields.installationEquipments = data.installationEquipments;
-  if (data.installationTools !== undefined) updateFields.installationTools = data.installationTools;
-  if (data.installationPersonel !== undefined) updateFields.installationPersonel = data.installationPersonel;
-  if (data.plannedStartDate !== undefined) updateFields.plannedStartDate = new Date(data.plannedStartDate);
-  if (data.plannedEndDate !== undefined) updateFields.plannedEndDate = new Date(data.plannedEndDate);
-  if (data.installationPeriod !== undefined) updateFields.installationPeriod = data.installationPeriod;
+  if (data.installationLocation !== undefined)
+    updateFields.installationLocation = data.installationLocation;
+  if (data.installationEquipments !== undefined)
+    updateFields.installationEquipments = data.installationEquipments;
+  if (data.installationTools !== undefined)
+    updateFields.installationTools = data.installationTools;
+  if (data.installationPersonel !== undefined)
+    updateFields.installationPersonel = data.installationPersonel;
+  if (data.plannedStartDate !== undefined)
+    updateFields.plannedStartDate = new Date(data.plannedStartDate);
+  if (data.plannedEndDate !== undefined)
+    updateFields.plannedEndDate = new Date(data.plannedEndDate);
+  if (data.installationPeriod !== undefined)
+    updateFields.installationPeriod = data.installationPeriod;
   if (data.note !== undefined) updateFields.note = data.note;
-  if (data.progression !== undefined) updateFields.progression = data.progression;
+  if (data.progression !== undefined)
+    updateFields.progression = data.progression;
 
   const result = await col.findOneAndUpdate(
     { _id: taskObjId },
     { $set: updateFields },
-    { returnDocument: "after" }
+    { returnDocument: "after" },
   );
 
   if (!result) {
@@ -140,7 +159,7 @@ export async function updateInstallationTask(
 
 export async function updateTaskProgress(
   taskId: string,
-  progression: number
+  progression: number,
 ): Promise<SerializedInstallationTask> {
   const col = await getInstallationDetailCollection();
   const taskObjId = toObjectId(taskId);
@@ -158,7 +177,7 @@ export async function updateTaskProgress(
         updatedAt: new Date(),
       },
     },
-    { returnDocument: "after" }
+    { returnDocument: "after" },
   );
 
   if (!result) {
@@ -169,7 +188,7 @@ export async function updateTaskProgress(
 
 export async function reorderInstallationTasks(
   projectId: string,
-  orderedTaskIds: string[]
+  orderedTaskIds: string[],
 ): Promise<boolean> {
   const col = await getInstallationDetailCollection();
   const projObjId = toObjectId(projectId);
@@ -193,7 +212,7 @@ export async function reorderInstallationTasks(
 }
 
 export async function listInstallationTasks(
-  projectId: string
+  projectId: string,
 ): Promise<SerializedInstallationTask[]> {
   "use cache";
   cacheTag(`project:${projectId}`);
@@ -226,7 +245,10 @@ export async function getTaskSummaryForProject(projectId: string): Promise<{
   }
 
   const completedTasks = tasks.filter((t) => t.progression >= 100).length;
-  const totalProgression = tasks.reduce((sum, t) => sum + (t.progression || 0), 0);
+  const totalProgression = tasks.reduce(
+    (sum, t) => sum + (t.progression || 0),
+    0,
+  );
   const avgProgression = Math.round(totalProgression / totalTasks);
 
   return {
