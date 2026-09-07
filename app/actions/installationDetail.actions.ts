@@ -26,7 +26,10 @@ import { revalidatePath, revalidateTag, updateTag } from "next/cache";
  * Helper to enforce SUPERVISOR-only write access per DATA_MODEL_SPEC.md §3.3:
  * MANAGER has read-only access; creating/editing installation plan items requires project membership (SUPERVISOR).
  */
-async function canWriteProjectPlan(userId: string, projectId: string): Promise<boolean> {
+async function canWriteProjectPlan(
+  userId: string,
+  projectId: string,
+): Promise<boolean> {
   return hasMembership(userId, projectId);
 }
 
@@ -35,7 +38,7 @@ async function canWriteProjectPlan(userId: string, projectId: string): Promise<b
  */
 export async function createInstallationTask(
   projectId: string,
-  input: unknown
+  input: unknown,
 ): Promise<Result<SerializedInstallationTask>> {
   try {
     const user = await getCurrentUser();
@@ -47,7 +50,7 @@ export async function createInstallationTask(
     if (!isSupervisor) {
       return fail(
         "Chỉ có giám sát viên được phân công mới có quyền tạo hạng mục công việc cho dự án này",
-        ERROR_CODES.FORBIDDEN
+        ERROR_CODES.FORBIDDEN,
       );
     }
 
@@ -57,7 +60,10 @@ export async function createInstallationTask(
     });
 
     if (!parsed.success) {
-      return fail(parsed.error.issues[0]?.message || "Dữ liệu nhập không hợp lệ", ERROR_CODES.VALIDATION_ERROR);
+      return fail(
+        parsed.error.issues[0]?.message || "Dữ liệu nhập không hợp lệ",
+        ERROR_CODES.VALIDATION_ERROR,
+      );
     }
 
     const task = await createInstallationTaskService(projectId, parsed.data);
@@ -66,9 +72,12 @@ export async function createInstallationTask(
     revalidatePath(`/projects/${projectId}`);
     revalidatePath(`/projects/${projectId}/plan`);
     return ok(task);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating installation task:", error);
-    return fail("Đã xảy ra lỗi khi tạo hạng mục lắp đặt", ERROR_CODES.INTERNAL_ERROR);
+    return fail(
+      "Đã xảy ra lỗi khi tạo hạng mục lắp đặt",
+      ERROR_CODES.INTERNAL_ERROR,
+    );
   }
 }
 
@@ -77,7 +86,7 @@ export async function createInstallationTask(
  */
 export async function updateInstallationTask(
   taskId: string,
-  input: unknown
+  input: unknown,
 ): Promise<Result<SerializedInstallationTask>> {
   try {
     const user = await getCurrentUser();
@@ -90,17 +99,23 @@ export async function updateInstallationTask(
       return fail("Không tìm thấy hạng mục lắp đặt", ERROR_CODES.NOT_FOUND);
     }
 
-    const isSupervisor = await canWriteProjectPlan(user.id, existingTask.projectId);
+    const isSupervisor = await canWriteProjectPlan(
+      user.id,
+      existingTask.projectId,
+    );
     if (!isSupervisor) {
       return fail(
         "Chỉ có giám sát viên được phân công mới có quyền cập nhật hạng mục công việc cho dự án này",
-        ERROR_CODES.FORBIDDEN
+        ERROR_CODES.FORBIDDEN,
       );
     }
 
     const parsed = updateInstallationTaskSchema.safeParse(input);
     if (!parsed.success) {
-      return fail(parsed.error.issues[0]?.message || "Dữ liệu nhập không hợp lệ", ERROR_CODES.VALIDATION_ERROR);
+      return fail(
+        parsed.error.issues[0]?.message || "Dữ liệu nhập không hợp lệ",
+        ERROR_CODES.VALIDATION_ERROR,
+      );
     }
 
     const updated = await updateInstallationTaskService(taskId, parsed.data);
@@ -114,7 +129,10 @@ export async function updateInstallationTask(
       return fail("Không tìm thấy hạng mục lắp đặt", ERROR_CODES.NOT_FOUND);
     }
     console.error("Error updating installation task:", error);
-    return fail("Đã xảy ra lỗi khi cập nhật hạng mục lắp đặt", ERROR_CODES.INTERNAL_ERROR);
+    return fail(
+      "Đã xảy ra lỗi khi cập nhật hạng mục lắp đặt",
+      ERROR_CODES.INTERNAL_ERROR,
+    );
   }
 }
 
@@ -123,7 +141,7 @@ export async function updateInstallationTask(
  */
 export async function updateTaskProgress(
   taskId: string,
-  progression: number
+  progression: number,
 ): Promise<Result<SerializedInstallationTask>> {
   try {
     const user = await getCurrentUser();
@@ -133,7 +151,10 @@ export async function updateTaskProgress(
 
     const parsed = updateTaskProgressSchema.safeParse({ taskId, progression });
     if (!parsed.success) {
-      return fail(parsed.error.issues[0]?.message || "Dữ liệu nhập không hợp lệ", ERROR_CODES.VALIDATION_ERROR);
+      return fail(
+        parsed.error.issues[0]?.message || "Dữ liệu nhập không hợp lệ",
+        ERROR_CODES.VALIDATION_ERROR,
+      );
     }
 
     const existingTask = await getInstallationTaskById(taskId);
@@ -141,15 +162,21 @@ export async function updateTaskProgress(
       return fail("Không tìm thấy hạng mục lắp đặt", ERROR_CODES.NOT_FOUND);
     }
 
-    const isSupervisor = await canWriteProjectPlan(user.id, existingTask.projectId);
+    const isSupervisor = await canWriteProjectPlan(
+      user.id,
+      existingTask.projectId,
+    );
     if (!isSupervisor) {
       return fail(
         "Chỉ có giám sát viên được phân công mới có quyền cập nhật tiến độ hạng mục",
-        ERROR_CODES.FORBIDDEN
+        ERROR_CODES.FORBIDDEN,
       );
     }
 
-    const updated = await updateTaskProgressService(taskId, parsed.data.progression);
+    const updated = await updateTaskProgressService(
+      taskId,
+      parsed.data.progression,
+    );
     updateTag(`project:${existingTask.projectId}`);
     revalidateTag(`project:${existingTask.projectId}`, "max");
     revalidatePath(`/projects/${existingTask.projectId}`);
@@ -160,7 +187,10 @@ export async function updateTaskProgress(
       return fail("Không tìm thấy hạng mục lắp đặt", ERROR_CODES.NOT_FOUND);
     }
     console.error("Error updating task progress:", error);
-    return fail("Đã xảy ra lỗi khi cập nhật tiến độ hạng mục", ERROR_CODES.INTERNAL_ERROR);
+    return fail(
+      "Đã xảy ra lỗi khi cập nhật tiến độ hạng mục",
+      ERROR_CODES.INTERNAL_ERROR,
+    );
   }
 }
 
@@ -169,7 +199,7 @@ export async function updateTaskProgress(
  */
 export async function reorderInstallationTasks(
   projectId: string,
-  orderedTaskIds: string[]
+  orderedTaskIds: string[],
 ): Promise<Result<{ reordered: boolean }>> {
   try {
     const user = await getCurrentUser();
@@ -177,20 +207,29 @@ export async function reorderInstallationTasks(
       return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
     }
 
-    const parsed = reorderInstallationTasksSchema.safeParse({ projectId, orderedTaskIds });
+    const parsed = reorderInstallationTasksSchema.safeParse({
+      projectId,
+      orderedTaskIds,
+    });
     if (!parsed.success) {
-      return fail(parsed.error.issues[0]?.message || "Dữ liệu nhập không hợp lệ", ERROR_CODES.VALIDATION_ERROR);
+      return fail(
+        parsed.error.issues[0]?.message || "Dữ liệu nhập không hợp lệ",
+        ERROR_CODES.VALIDATION_ERROR,
+      );
     }
 
     const isSupervisor = await canWriteProjectPlan(user.id, projectId);
     if (!isSupervisor) {
       return fail(
         "Chỉ có giám sát viên được phân công mới có quyền sắp xếp lại thứ tự hạng mục cho dự án này",
-        ERROR_CODES.FORBIDDEN
+        ERROR_CODES.FORBIDDEN,
       );
     }
 
-    await reorderInstallationTasksService(projectId, parsed.data.orderedTaskIds);
+    await reorderInstallationTasksService(
+      projectId,
+      parsed.data.orderedTaskIds,
+    );
     updateTag(`project:${projectId}`);
     revalidateTag(`project:${projectId}`, "max");
     revalidatePath(`/projects/${projectId}`);
@@ -198,7 +237,10 @@ export async function reorderInstallationTasks(
     return ok({ reordered: true });
   } catch (error: any) {
     console.error("Error reordering installation tasks:", error);
-    return fail("Đã xảy ra lỗi khi sắp xếp lại thứ tự hạng mục", ERROR_CODES.INTERNAL_ERROR);
+    return fail(
+      "Đã xảy ra lỗi khi sắp xếp lại thứ tự hạng mục",
+      ERROR_CODES.INTERNAL_ERROR,
+    );
   }
 }
 
@@ -206,7 +248,7 @@ export async function reorderInstallationTasks(
  * List installation tasks for a project (MANAGER: any project; SUPERVISOR: assigned project).
  */
 export async function listInstallationTasks(
-  projectId: string
+  projectId: string,
 ): Promise<Result<SerializedInstallationTask[]>> {
   try {
     const user = await getCurrentUser();
@@ -214,15 +256,24 @@ export async function listInstallationTasks(
       return fail("Chưa đăng nhập", ERROR_CODES.UNAUTHENTICATED);
     }
 
-    const hasAccess = await canAccessProject({ id: user.id, role: user.role }, projectId);
+    const hasAccess = await canAccessProject(
+      { id: user.id, role: user.role },
+      projectId,
+    );
     if (!hasAccess) {
-      return fail("Bạn không có quyền truy cập dự án này", ERROR_CODES.FORBIDDEN);
+      return fail(
+        "Bạn không có quyền truy cập dự án này",
+        ERROR_CODES.FORBIDDEN,
+      );
     }
 
     const tasks = await listInstallationTasksService(projectId);
     return ok(tasks);
   } catch (error: any) {
     console.error("Error listing installation tasks:", error);
-    return fail("Đã xảy ra lỗi khi tải danh sách hạng mục lắp đặt", ERROR_CODES.INTERNAL_ERROR);
+    return fail(
+      "Đã xảy ra lỗi khi tải danh sách hạng mục lắp đặt",
+      ERROR_CODES.INTERNAL_ERROR,
+    );
   }
 }
