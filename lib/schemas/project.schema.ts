@@ -29,31 +29,34 @@ export const createProjectSchema = z.object({
   name: z.string().min(1, "Vui lòng nhập tên dự án").trim(),
   description: z.string().default(""),
   factory: factorySchema,
-  briefPlan: z.string().nullable().optional().default(null),
-  startDate: z.coerce.date(),
-  plannedEndDate: z.coerce.date(),
+  briefPlan: z.string().optional().default(""),
+  startDate: z.date({
+    message: "Vui lòng chọn ngày bắt đầu hợp lệ",
+  }),
+  plannedEndDate: z.date({
+    message: "Vui lòng chọn ngày dự kiến kết thúc hợp lệ",
+  }),
   status: z.enum(PROJECT_STATUSES).default("PLANNED"),
 });
 
 export const updateProjectSchema = createProjectSchema.partial().extend({
   actualEndDate: z.preprocess(
     (val) => (val === "" ? null : val),
-    z.coerce.date().nullable().optional()
+    z.coerce.date().nullable().optional(),
   ),
   startDate: z.preprocess(
     (val) => (val === "" ? undefined : val),
-    z.coerce.date().optional()
+    z.coerce.date().optional(),
   ),
   plannedEndDate: z.preprocess(
     (val) => (val === "" ? undefined : val),
-    z.coerce.date().optional()
+    z.coerce.date().optional(),
   ),
   briefPlan: z.preprocess(
     (val) => (val === "" ? null : val),
-    z.string().nullable().optional()
+    z.string().nullable().optional(),
   ),
 });
 
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;
 export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
-
